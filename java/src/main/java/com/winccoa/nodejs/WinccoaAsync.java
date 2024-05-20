@@ -10,7 +10,7 @@ public class WinccoaAsync {
 
     WinccoaCore scada = new WinccoaCore();
 
-    private ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
     public void test() {
         new Thread(() -> {
