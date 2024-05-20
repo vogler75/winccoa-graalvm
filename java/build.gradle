@@ -30,5 +30,5 @@ test {
 
 tasks.register('copyAllDependencies', Copy) {
     from configurations.compileClasspath
-    into "${buildDir}/output/libs"
+    into "libs"
 }
