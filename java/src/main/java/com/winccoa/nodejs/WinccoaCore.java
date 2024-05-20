@@ -1,4 +1,4 @@
-package com.winccoa;
+package com.winccoa.nodejs;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;

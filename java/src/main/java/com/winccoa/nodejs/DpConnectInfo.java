@@ -1,4 +1,4 @@
-package com.winccoa;
+package com.winccoa.nodejs;
 
 import java.util.function.Consumer;
 

@@ -1,4 +1,4 @@
-package com.winccoa;
+package com.winccoa.mqtt;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;

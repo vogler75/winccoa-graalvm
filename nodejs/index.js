@@ -8,8 +8,7 @@ global.scada = new WinccoaManager();
 global.node = require('./node');
 
 // Main Java object for communication
-global.java = new (Java.type('com.winccoa.WinccoaAsync'))();
+global.java = new (Java.type('com.winccoa.nodejs.WinccoaAsync'))();
+const intervalId = setInterval(() => { while (java.loop()); }, 1);
+
 global.java.test();
-const intervalId = setInterval(() => {
-    while (java.loop()) ;    
-}, 1);
