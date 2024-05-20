@@ -19,6 +19,7 @@ dependencies {
 
     implementation "io.vertx:vertx-core:$vertxVersion"
     implementation "io.vertx:vertx-web:$vertxVersion"
+    implementation "io.vertx:vertx-mqtt:$vertxVersion"
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
