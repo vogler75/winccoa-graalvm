@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.winccoa'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+project.ext {
+    vertxVersion = "4.5.1"
+}
+
+dependencies {
+    implementation 'org.graalvm.polyglot:polyglot:24.0.1'
+    implementation 'org.graalvm.polyglot:js:24.0.1'
+
+    implementation "io.vertx:vertx-core:$vertxVersion"
+    implementation "io.vertx:vertx-web:$vertxVersion"
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.register('copyAllDependencies', Copy) {
+    from configurations.compileClasspath
+    into "${buildDir}/output/libs"
+}

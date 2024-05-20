@@ -1,0 +1,11 @@
+{
+  "name": "Java",
+  "version": "0.1.0",
+  "description": "Java for WiCCOA",
+  "main": "index.js",
+  "keywords": [
+    "WinCCOA"
+  ],"license": "MIT",
+  "dependencies": {    
+  }
+}
