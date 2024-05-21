@@ -7,11 +7,10 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class WinccoaAsync implements IWinccoa {
-    private final WinccoaCore scada = new WinccoaCore();;
-
+    protected final WinccoaCore scada = new WinccoaCore();
     private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
-    // Called from node.js every 1ms.
+    // Called from node.js every x ms.
     public boolean loop() {
         var next = queue.poll();
         if (next != null) {
