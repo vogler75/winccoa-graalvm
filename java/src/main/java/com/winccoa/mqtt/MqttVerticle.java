@@ -14,8 +14,9 @@ import java.util.UUID;
 public class MqttVerticle extends AbstractVerticle {
     private WinccoaAsync scada;
     private MqttEndpoint endpoint;
-
     private HashMap<String, String> subscribedTopics = new HashMap<>();
+    private volatile long messageTimer = 0;
+    private int messageCounter = 0;
 
     public MqttVerticle(WinccoaAsync scada, MqttEndpoint endpoint) {
         this.scada = scada;
@@ -24,26 +25,29 @@ public class MqttVerticle extends AbstractVerticle {
 
     @Override
     public void start(Promise<Void> startPromise) {
-        scada.logInfo("Client connected: "+endpoint.clientIdentifier()+
-                " CleanSession: "+endpoint.isCleanSession()+
-                " Connected: "+endpoint.isConnected()+
-                " Version: "+endpoint.protocolVersion()+
-                " Protocol: "+endpoint.protocolName());
-        endpoint.connectProperties().listAll().forEach((p)->{
-            scada.logInfo(p.toString());
-        });
+        scada.logInfo("Client connected: " + endpoint.clientIdentifier() +
+                " CleanSession: " + endpoint.isCleanSession() +
+                " Connected: " + endpoint.isConnected() +
+                " Version: " + endpoint.protocolVersion() +
+                " Protocol: " + endpoint.protocolName());
 
-        endpoint.accept(); // false .. no previous session present
+        endpoint.accept(false); // false .. no previous session present
+
+        messageTimer = vertx.setPeriodic(1000, id -> {
+            messageCounter = 0;
+        });
 
         endpoint.disconnectHandler((handler) -> {
             scada.logInfo("Client disconnect: " + endpoint.clientIdentifier());
             unsubscribeAll();
+            vertx.cancelTimer(messageTimer);
             vertx.undeploy(this.deploymentID());
         });
 
         endpoint.closeHandler((handler) -> {
             scada.logInfo("Client close: " + endpoint.clientIdentifier());
             unsubscribeAll();
+            vertx.cancelTimer(messageTimer);
             vertx.undeploy(this.deploymentID());
         });
 
@@ -56,17 +60,18 @@ public class MqttVerticle extends AbstractVerticle {
                 var uuid = UUID.randomUUID().toString();
                 scada.dpConnect(uuid, topic.topicName(), true, (data) -> {
                     if (endpoint.isConnected()) {
+                        messageCounter++;
                         data.asList().forEach((record) -> {
                             endpoint.publish(record.getKey(),
                                     Buffer.buffer(record.getValue().toString()),
                                     MqttQoS.AT_LEAST_ONCE, false /*isDup*/, false /* isRetain */);
                         });
                     }
-                }).thenAccept((ok)-> {
+                }).thenAccept((ok) -> {
                     if (ok) {
-                        subscribedTopics.put(topic.topicName(), uuid)  ;
+                        subscribedTopics.put(topic.topicName(), uuid);
                     } else {
-                        scada.logWarning("Subscribe to "+topic.topicName()+" failed.");
+                        scada.logWarning("Subscribe to " + topic.topicName() + " failed.");
                     }
                 });
             });
@@ -76,17 +81,23 @@ public class MqttVerticle extends AbstractVerticle {
             message.topics().forEach((topic) -> {
                 var uuid = subscribedTopics.remove(topic);
                 if (uuid != null) {
-                    scada.dpDisconnect(uuid).thenAccept((ok)->{
-                       if (!ok) {
-                           scada.logWarning("Unsubscribe to "+topic+" failed.");
-                       }
+                    scada.dpDisconnect(uuid).thenAccept((ok) -> {
+                        if (!ok) {
+                            scada.logWarning("Unsubscribe to " + topic + " failed.");
+                        }
                     });
                 }
             });
         });
     }
 
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+    }
+
+
     private void unsubscribeAll() {
-        subscribedTopics.forEach((topic, uuid)->scada.dpDisconnect(uuid));
+        subscribedTopics.forEach((topic, uuid) -> scada.dpDisconnect(uuid));
     }
 }
