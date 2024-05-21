@@ -35,7 +35,7 @@ public class WinccoaAsync {
                 });
             });
 
-            logInfo("Set 0 "+ dpSet("ExampleDP_Arg1.", 0));
+            var promise0 = dpSet("ExampleDP_Arg1.", 0).thenAccept((value)-> logInfo("Set 0 Doen!"));
 
             var promise1 = dpSetWait("ExampleDP_Arg1.", 1).thenAccept((value)-> logInfo("Set 1 Done!"));
 
@@ -46,7 +46,7 @@ public class WinccoaAsync {
                     Arrays.asList(3,3)
             ).thenAccept((value)-> logInfo("Set 3 Done!"));
 
-            CompletableFuture.allOf(promise1, promise2, promise3).thenAccept((unused)-> {
+            CompletableFuture.allOf(promise0, promise1, promise2, promise3).thenAccept((unused)-> {
                 logInfo("Disconnect: "+dpDisconnect(id1));
                 logInfo("Disconnect: "+dpDisconnect(id2));
                 logInfo("Disconnect: "+dpQueryDisconnect(id3));
@@ -54,8 +54,9 @@ public class WinccoaAsync {
                 dpGet(Arrays.asList("ExampleDP_Arg1.", "ExampleDP_Arg2.")).thenAccept((value)->logInfo("dpGet: "+value.toString()));
             });
 
-            dpSet(Arrays.asList("ExampleDP_Rpt1.","ExampleDP_Rpt2."), Arrays.asList(3, 4));
-
+            dpSet(Arrays.asList("ExampleDP_Rpt1.","ExampleDP_Rpt2."), Arrays.asList(3, 4))
+                    .thenAccept((value)->logInfo("Set Array "+value));
+            
             logInfo("Test End.");
 
         }).start();
@@ -96,7 +97,7 @@ public class WinccoaAsync {
 
     public CompletableFuture<Boolean> dpSet(Object... arguments) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> promise.complete(scada.dpSet(arguments)));
+        queue.add(() -> scada.dpSet(arguments).thenAccept(promise::complete));
         return promise;
     }
 
@@ -128,7 +129,7 @@ public class WinccoaAsync {
 
     public CompletableFuture<Boolean> dpConnect(String uuid, List<String> names, Boolean answer, Consumer<DpConnectData> callback) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> promise.complete(scada.dpConnect(uuid, names, answer, callback)));
+        queue.add(() -> scada.dpConnect(uuid, names, answer, callback).thenAccept(promise::complete));
         return promise;
     }
 
@@ -138,7 +139,7 @@ public class WinccoaAsync {
 
     public CompletableFuture<Boolean> dpDisconnect(String uuid) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> promise.complete(scada.dpDisconnect(uuid)));
+        queue.add(() -> scada.dpDisconnect(uuid).thenAccept(promise::complete));
         return promise;
     }
 
@@ -146,7 +147,7 @@ public class WinccoaAsync {
 
     public CompletableFuture<Boolean> dpQueryConnectSingle(String uuid, String query, Boolean answer, Consumer<DpQueryConnectData> callback) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> promise.complete(scada.dpQueryConnectSingle(uuid, query, answer, callback)));
+        queue.add(() -> scada.dpQueryConnectSingle(uuid, query, answer, callback).thenAccept(promise::complete));
         return promise;
     }
 
@@ -156,7 +157,7 @@ public class WinccoaAsync {
 
     public CompletableFuture<Boolean> dpQueryDisconnect(String uuid) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> promise.complete(scada.dpQueryDisconnect(uuid)));
+        queue.add(() -> scada.dpQueryDisconnect(uuid).thenAccept(promise::complete));
         return promise;
     }
 

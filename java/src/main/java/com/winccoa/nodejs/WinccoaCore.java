@@ -40,7 +40,7 @@ public class WinccoaCore {
            });
         });
 
-        logInfo("Set 0 "+ dpSet("ExampleDP_Arg1.", 0));
+        var promise0 = dpSet("ExampleDP_Arg1.", 0).thenAccept((value)-> logInfo("Set 0 Doen!"));
 
         var promise1 = dpSetWait("ExampleDP_Arg1.", 1).thenAccept((value)-> logInfo("Set 1 Done!"));
 
@@ -51,7 +51,7 @@ public class WinccoaCore {
                 Arrays.asList(3,3)
         ).thenAccept((value)-> logInfo("Set 3 Done!"));
 
-        CompletableFuture.allOf(promise1, promise2, promise3).thenAccept((unused)-> {
+        CompletableFuture.allOf(promise0, promise1, promise2, promise3).thenAccept((unused)-> {
             logInfo("Disconnect: "+dpDisconnect(id1));
             logInfo("Disconnect: "+dpDisconnect(id2));
             logInfo("Disconnect: "+dpQueryDisconnect(id3));
@@ -59,7 +59,8 @@ public class WinccoaCore {
             dpGet(Arrays.asList("ExampleDP_Arg1.", "ExampleDP_Arg2.")).thenAccept((value)->logInfo("dpGet: "+value.toString()));
         });
 
-        dpSet(Arrays.asList("ExampleDP_Rpt1.","ExampleDP_Rpt2."), Arrays.asList(3, 4));
+        dpSet(Arrays.asList("ExampleDP_Rpt1.","ExampleDP_Rpt2."), Arrays.asList(3, 4))
+                .thenAccept((value)->logInfo("Set Array "+value));
 
         logInfo("Test End.");
     }
@@ -144,9 +145,11 @@ public class WinccoaCore {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public Boolean dpSet(Object... arguments) {
+    public CompletableFuture<Boolean> dpSet(Object... arguments) {
+        var promise = new CompletableFuture<Boolean>();
         Value result = jsDpSet.execute(arguments);
-        return result.asBoolean();
+        promise.complete(result.asBoolean());
+        return promise;
     }
 
     public CompletableFuture<Boolean> dpSetWait(Object... arguments) {
@@ -177,18 +180,21 @@ public class WinccoaCore {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public boolean dpConnect(String uuid, String name, Boolean answer, Consumer<DpConnectData> callback) {
+    public CompletableFuture<Boolean> dpConnect(String uuid, String name, Boolean answer, Consumer<DpConnectData> callback) {
         return dpConnect(uuid, Collections.singletonList(name), answer, callback);
     }
 
-    public boolean dpConnect(String uuid, List<String> names, Boolean answer, Consumer<DpConnectData> callback) {
+    public CompletableFuture<Boolean> dpConnect(String uuid, List<String> names, Boolean answer, Consumer<DpConnectData> callback) {
+        var promise = new CompletableFuture<Boolean>();
+
         long id = jsDpConnect.execute(uuid, names, answer).asLong();
         if (id >= 0) {
             dpConnects.put(uuid, new DpConnectInfo(id, callback));
-            return true;
+            promise.complete(true);
         } else {
-            return false;
+            promise.complete(false);
         }
+        return promise;
     }
 
     public void dpConnectCallback(String uuid, String[] names, Value[] values, boolean answer) {
@@ -197,27 +203,31 @@ public class WinccoaCore {
                 .ifPresent((data)-> data.callback().accept(new DpConnectData(answer, names, values)));
     }
 
-    public boolean dpDisconnect(String uuid) {
+    public CompletableFuture<Boolean> dpDisconnect(String uuid) {
+        var promise = new CompletableFuture<Boolean>();
         if (dpConnects.containsKey(uuid)) {
             DpConnectInfo data = dpConnects.get(uuid);
             jsDpDisconnect.execute(data.id());
             dpConnects.remove(uuid);
-            return true;
+            promise.complete(true);
         } else {
-            return false;
+            promise.complete(false);
         }
+        return promise;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public boolean dpQueryConnectSingle(String uuid, String query, Boolean answer, Consumer<DpQueryConnectData> callback) {
+    public CompletableFuture<Boolean> dpQueryConnectSingle(String uuid, String query, Boolean answer, Consumer<DpQueryConnectData> callback) {
+        var promise = new CompletableFuture<Boolean>();
         long id = jsDpQueryConnectSingle.execute(uuid, query, answer).asLong();
         if (id >= 0) {
             dpQueryConnects.put(uuid, new DpQueryConnectInfo(id, callback));
-            return true;
+            promise.complete(true);
         } else {
-            return false;
+            promise.complete(false);
         }
+        return promise;
     }
 
     public void dpQueryConnectCallback(String uuid, Value[][] values, boolean answer) {
@@ -226,15 +236,17 @@ public class WinccoaCore {
                 .ifPresent((data)-> data.callback().accept(new DpQueryConnectData(answer, values)));
     }
 
-    public boolean dpQueryDisconnect(String uuid) {
+    public CompletableFuture<Boolean> dpQueryDisconnect(String uuid) {
+        var promise = new CompletableFuture<Boolean>();
         if (dpQueryConnects.containsKey(uuid)) {
             DpQueryConnectInfo data = dpQueryConnects.get(uuid);
             jsDpQueryDisconnect.execute(data.id());
             dpQueryConnects.remove(uuid);
-            return true;
+            promise.complete(true);
         } else {
-            return false;
+            promise.complete(false);
         }
+        return promise;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
