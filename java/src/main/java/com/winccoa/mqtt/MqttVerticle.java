@@ -7,12 +7,6 @@ import io.vertx.core.Promise;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttEndpoint;
-import io.vertx.mqtt.MqttServer;
-import io.vertx.mqtt.MqttServerOptions;
-import io.vertx.mqtt.MqttTopicSubscription;
-import io.vertx.mqtt.messages.MqttPublishMessage;
-import io.vertx.mqtt.messages.MqttSubscribeMessage;
-import io.vertx.mqtt.messages.MqttUnsubscribeMessage;
 
 public class MqttVerticle extends AbstractVerticle {
     WinccoaAsync scada;
@@ -42,9 +36,9 @@ public class MqttVerticle extends AbstractVerticle {
             message.topicSubscriptions().forEach((topic)->{
                 scada.dpConnect(topic.topicName(), topic.topicName(), true, (data)->{
                     scada.logInfo("Publish data.");
-                    for (int i=0; i<data.name().length; i++) {
+                    for (int i = 0; i<data.names().length; i++) {
                         endpoint.publish(topic.topicName(),
-                                Buffer.buffer(data.value()[i].toString()),
+                                Buffer.buffer(data.values()[i].toString()),
                                 MqttQoS.AT_LEAST_ONCE,  false /*isDup*/, false /* isRetain */);
                     }
                 });

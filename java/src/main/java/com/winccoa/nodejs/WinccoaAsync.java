@@ -18,12 +18,21 @@ public class WinccoaAsync {
 
             var id1 = UUID.randomUUID().toString();
             dpConnect(id1, "ExampleDP_Rpt1.", true, (data) -> {
-                logInfo("Callback Single "+ Arrays.toString(data.name()) +" "+ Arrays.toString(data.value()));
+                logInfo("Callback Single "+ Arrays.toString(data.names()) +" "+ Arrays.toString(data.values()));
             });
 
             var id2 = UUID.randomUUID().toString();
             dpConnect(id2, Arrays.asList("ExampleDP_Arg1.", "ExampleDP_Arg2."), true, (data) -> {
-                logInfo("Callback Array "+ Arrays.toString(data.name()) +" "+ Arrays.toString(data.value()));
+                logInfo("Callback Array "+ Arrays.toString(data.names()) +" "+ Arrays.toString(data.values()));
+            });
+
+            var id3 = UUID.randomUUID().toString();
+            var sql = "SELECT '_online.._value' FROM '*' WHERE _DPT= \"ExampleDP_Float\"";
+            dpQueryConnectSingle(id3, sql, true, (data) -> {
+                logInfo("Callback Query: "+data.values().length);
+                List.of(data.values()).forEach((row)-> {
+                    logInfo("+ "+Arrays.toString(row));
+                });
             });
 
             logInfo("Set 0 "+ dpSet("ExampleDP_Arg1.", 0));
@@ -40,6 +49,7 @@ public class WinccoaAsync {
             CompletableFuture.allOf(promise1, promise2, promise3).thenAccept((unused)-> {
                 logInfo("Disconnect: "+dpDisconnect(id1));
                 logInfo("Disconnect: "+dpDisconnect(id2));
+                logInfo("Disconnect: "+dpQueryDisconnect(id3));
                 dpGet("ExampleDP_Arg1.").thenAccept((value)->logInfo("dpGet: "+value.toString()));
                 dpGet(Arrays.asList("ExampleDP_Arg1.", "ExampleDP_Arg2.")).thenAccept((value)->logInfo("dpGet: "+value.toString()));
             });
@@ -121,6 +131,22 @@ public class WinccoaAsync {
     public CompletableFuture<Boolean> dpDisconnect(String uuid) {
         var promise = new CompletableFuture<Boolean>();
         queue.add(() -> promise.complete(scada.dpDisconnect(uuid)));
+        return promise;
+    }
+
+    public CompletableFuture<Boolean> dpQueryConnectSingle(String uuid, String query, Boolean answer, Consumer<DpQueryConnectData> callback) {
+        var promise = new CompletableFuture<Boolean>();
+        queue.add(() -> promise.complete(scada.dpQueryConnectSingle(uuid, query, answer, callback)));
+        return promise;
+    }
+
+    public void dpQueryConnectCallback(String uuid, Value[][] values, boolean answer) {
+        scada.dpQueryConnectCallback(uuid, values, answer);
+    }
+
+    public CompletableFuture<Boolean> dpQueryDisconnect(String uuid) {
+        var promise = new CompletableFuture<Boolean>();
+        queue.add(() -> promise.complete(scada.dpQueryDisconnect(uuid)));
         return promise;
     }
 

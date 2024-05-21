@@ -1,5 +1,7 @@
 const { WinccoaConnectUpdateType } = require('winccoa-manager');
 
+// -----------------------------------------------------------------------------------------------------------------
+
 function dpConnect(uuid, dps, answer) {
     function dpConnectCallback(names, values, type, error) {
         if (error) {
@@ -33,7 +35,43 @@ function dpDisconnect(id) {
     }
 }
 
+// -----------------------------------------------------------------------------------------------------------------
+
+function dpQueryConnectSingle(uuid, query, answer) {
+    function dpQueryConnectSingleCallback(values, type, error) {
+        if (error) {
+            console.log("Node::dpQueryConnectSingleCallback Error: "+uuid+" "+error);
+        } else {
+            let answer = (type == WinccoaConnectUpdateType.Answer);
+            java.dpQueryConnectCallback(uuid, values, answer);
+        }
+    }
+    try {
+        id = scada.dpQueryConnectSingle(dpQueryConnectSingleCallback, answer, query);
+        console.log("Node::dpQueryConnectSingle("+uuid+","+query+","+id+")");
+        return id;
+    } catch (e) {
+        console.error(e);
+        return -1;
+    }
+}
+
+function dpQueryDisconnect(id) {
+    try {
+        ret = scada.dpQueryDisconnect(id);
+        console.log("Node::dpQueryDisconnect("+id+","+ret+")");
+        return ret;
+    } catch (e) {
+        console.error(e);
+        return -1;
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+
 module.exports = {
     dpConnect,
-    dpDisconnect
+    dpDisconnect,
+    dpQueryConnectSingle,
+    dpQueryDisconnect
 };

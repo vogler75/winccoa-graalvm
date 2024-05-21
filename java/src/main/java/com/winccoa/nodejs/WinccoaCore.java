@@ -11,7 +11,8 @@ public class WinccoaCore {
     private final String jsLangId = "js";
     private final Context ctx = Context.getCurrent();
 
-    private final HashMap<String, DpConnectInfo> dpConnectData = new HashMap<>();
+    private final HashMap<String, DpConnectInfo> dpConnects = new HashMap<>();
+    private final HashMap<String, DpQueryConnectInfo> dpQueryConnects = new HashMap<>();
 
     public static void main(String[] args) {
         System.out.println("Please run it from Node.js.");
@@ -22,12 +23,21 @@ public class WinccoaCore {
 
         var id1 = UUID.randomUUID().toString();
         dpConnect(id1, "ExampleDP_Rpt1.", true, (data) -> {
-            logInfo("Callback Single "+ Arrays.toString(data.name()) +" "+ Arrays.toString(data.value()));
+            logInfo("Callback Single "+ Arrays.toString(data.names()) +" "+ Arrays.toString(data.values()));
         });
 
         var id2 = UUID.randomUUID().toString();
         dpConnect(id2, Arrays.asList("ExampleDP_Arg1.", "ExampleDP_Arg2."), true, (data) -> {
-            logInfo("Callback Array "+ Arrays.toString(data.name()) +" "+ Arrays.toString(data.value()));
+            logInfo("Callback Array "+ Arrays.toString(data.names()) +" "+ Arrays.toString(data.values()));
+        });
+
+        var id3 = UUID.randomUUID().toString();
+        var sql = "SELECT '_online.._value' FROM '*' WHERE _DPT= \"ExampleDP_Float\"";
+        dpQueryConnectSingle(id3, sql, true, (data) -> {
+            logInfo("Callback Query: "+data.values().length);
+           List.of(data.values()).forEach((row)-> {
+               logInfo("+ "+Arrays.toString(row));
+           });
         });
 
         logInfo("Set 0 "+ dpSet("ExampleDP_Arg1.", 0));
@@ -44,6 +54,7 @@ public class WinccoaCore {
         CompletableFuture.allOf(promise1, promise2, promise3).thenAccept((unused)-> {
             logInfo("Disconnect: "+dpDisconnect(id1));
             logInfo("Disconnect: "+dpDisconnect(id2));
+            logInfo("Disconnect: "+dpQueryDisconnect(id3));
             dpGet("ExampleDP_Arg1.").thenAccept((value)->logInfo("dpGet: "+value.toString()));
             dpGet(Arrays.asList("ExampleDP_Arg1.", "ExampleDP_Arg2.")).thenAccept((value)->logInfo("dpGet: "+value.toString()));
         });
@@ -95,7 +106,7 @@ public class WinccoaCore {
     public CompletableFuture<Boolean> dpSetWait(Object... arguments) {
         Value promise = jsDpSetWait.execute(arguments);  // js promise
         var future = new CompletableFuture<Boolean>(); // java promise
-        Consumer<Boolean> then = future::complete; // = (value) -> future.complete(value);
+        Consumer<Boolean> then = future::complete; // = (values) -> future.complete(values);
         promise.invokeMember("then", then);
         return future;
     }
@@ -113,15 +124,15 @@ public class WinccoaCore {
     public CompletableFuture<Object> dpGet(String dps) {
         Value promise = jsDpGet.execute(dps);  // js promise
         var future = new CompletableFuture<>(); // java promise
-        Consumer<Object> then = future::complete; // = (value) -> future.complete(value);
+        Consumer<Object> then = future::complete; // = (values) -> future.complete(values);
         promise.invokeMember("then", then);
         return future;
     }
 
     public CompletableFuture<Object> dpGet(List<String> dps) {
-        Value promise = jsDpGet.execute((Object) dps);  // js promise
+        Value promise = jsDpGet.execute(dps);  // js promise
         var future = new CompletableFuture<>(); // java promise
-        Consumer<Object> then = future::complete; // = (value) -> future.complete(value);
+        Consumer<Object> then = future::complete; // = (values) -> future.complete(values);
         promise.invokeMember("then", then);
         return future;
     }
@@ -143,7 +154,7 @@ public class WinccoaCore {
     public boolean dpConnect(String uuid, List<String> names, Boolean answer, Consumer<DpConnectData> callback) {
         long id = jsDpConnect.execute(uuid, names, answer).asLong();
         if (id >= 0) {
-            dpConnectData.put(uuid, new DpConnectInfo(id, callback));
+            dpConnects.put(uuid, new DpConnectInfo(id, callback));
             return true;
         } else {
             return false;
@@ -152,11 +163,9 @@ public class WinccoaCore {
 
     public void dpConnectCallback(String uuid, String[] names, Value[] values, boolean answer) {
         //logInfo("Java::dpConnectCallback "+uuid+" => "+names+" => "+values+" answer: "+answer);
-        Optional.ofNullable(dpConnectData.get(uuid))
-                .ifPresent((data)-> data.callback().accept(new DpConnectData(names, values)));
+        Optional.ofNullable(dpConnects.get(uuid))
+                .ifPresent((data)-> data.callback().accept(new DpConnectData(answer, names, values)));
     }
-
-    // -----------------------------------------------------------------------------------------------------------------
 
     private final Value jsDpDisconnect = ctx.eval(jsLangId, """
         (function(id) {
@@ -166,10 +175,53 @@ public class WinccoaCore {
         """);
 
     public boolean dpDisconnect(String uuid) {
-        if (dpConnectData.containsKey(uuid)) {
-            DpConnectInfo data = dpConnectData.get(uuid);
+        if (dpConnects.containsKey(uuid)) {
+            DpConnectInfo data = dpConnects.get(uuid);
             jsDpDisconnect.execute(data.id());
-            dpConnectData.remove(uuid);
+            dpConnects.remove(uuid);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private final Value jsDpQueryConnectSingle = ctx.eval(jsLangId, """
+        (function(uuid, query, answer) {
+            console.log(`Java::jsDpQueryConnectSingle(${uuid},${query},${answer})`);
+            return node.dpQueryConnectSingle(uuid, query, answer);
+        })
+        """);
+
+    public boolean dpQueryConnectSingle(String uuid, String query, Boolean answer, Consumer<DpQueryConnectData> callback) {
+        long id = jsDpQueryConnectSingle.execute(uuid, query, answer).asLong();
+        if (id >= 0) {
+            dpQueryConnects.put(uuid, new DpQueryConnectInfo(id, callback));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void dpQueryConnectCallback(String uuid, Value[][] values, boolean answer) {
+        //logInfo("Java::dpConnectCallback "+uuid+" => "+names+" => "+values+" answer: "+answer);
+        Optional.ofNullable(dpQueryConnects.get(uuid))
+                .ifPresent((data)-> data.callback().accept(new DpQueryConnectData(answer, values)));
+    }
+
+    private final Value jsDpQueryDisconnect = ctx.eval(jsLangId, """
+        (function(id) {
+            console.log(`Java::dpQueryDisconnect(${id})`);
+            return node.dpQueryDisconnect(id);
+        })
+        """);
+
+    public boolean dpQueryDisconnect(String uuid) {
+        if (dpQueryConnects.containsKey(uuid)) {
+            DpQueryConnectInfo data = dpQueryConnects.get(uuid);
+            jsDpQueryDisconnect.execute(data.id());
+            dpQueryConnects.remove(uuid);
             return true;
         } else {
             return false;

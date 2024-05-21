@@ -2,8 +2,7 @@ package com.winccoa.nodejs;
 
 import org.graalvm.polyglot.Value;
 
-public record DpConnectData(
+public record DpQueryConnectData(
         boolean answer,
-        String[] names,
-        Value[] values
+        Value[][] values
 ) { }
