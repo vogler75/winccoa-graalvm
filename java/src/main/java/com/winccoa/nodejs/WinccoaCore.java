@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.concurrent.CompletableFuture;
 
-public class WinccoaCore {
+public class WinccoaCore implements IWinccoa {
     private final String jsLangId = "js";
     private final Context ctx = Context.getCurrent();
 
@@ -131,20 +131,24 @@ public class WinccoaCore {
 
     // -----------------------------------------------------------------------------------------------------------------
         
+    @Override
     public void logInfo(String message) {
         ctx.eval(jsLangId, "scada.logInfo('"+message+"')");
     }
 
+    @Override
     public void logWarning(String message) {
         ctx.eval(jsLangId, "scada.logWarning('"+message+"')");
     }
 
+    @Override
     public void logSevere(String message) {
         ctx.eval(jsLangId, "scada.logSevere('"+message+"')");
     }        
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    @Override
     public CompletableFuture<Boolean> dpSet(Object... arguments) {
         var promise = new CompletableFuture<Boolean>();
         Value result = jsDpSet.execute(arguments);
@@ -152,6 +156,7 @@ public class WinccoaCore {
         return promise;
     }
 
+    @Override
     public CompletableFuture<Boolean> dpSetWait(Object... arguments) {
         Value promise = jsDpSetWait.execute(arguments);  // js promise
         var future = new CompletableFuture<Boolean>(); // java promise
@@ -162,6 +167,7 @@ public class WinccoaCore {
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    @Override
     public CompletableFuture<Object> dpGet(String dps) {
         Value promise = jsDpGet.execute(dps);  // js promise
         var future = new CompletableFuture<>(); // java promise
@@ -170,6 +176,7 @@ public class WinccoaCore {
         return future;
     }
 
+    @Override
     public CompletableFuture<Object> dpGet(List<String> dps) {
         Value promise = jsDpGet.execute(dps);  // js promise
         var future = new CompletableFuture<>(); // java promise
@@ -180,10 +187,12 @@ public class WinccoaCore {
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    @Override
     public CompletableFuture<Boolean> dpConnect(String uuid, String name, Boolean answer, Consumer<DpConnectData> callback) {
         return dpConnect(uuid, Collections.singletonList(name), answer, callback);
     }
 
+    @Override
     public CompletableFuture<Boolean> dpConnect(String uuid, List<String> names, Boolean answer, Consumer<DpConnectData> callback) {
         var promise = new CompletableFuture<Boolean>();
 
@@ -197,12 +206,14 @@ public class WinccoaCore {
         return promise;
     }
 
+    @Override
     public void dpConnectCallback(String uuid, String[] names, Value[] values, boolean answer) {
         //logInfo("Java::dpConnectCallback "+uuid+" => "+names+" => "+values+" answer: "+answer);
         Optional.ofNullable(dpConnects.get(uuid))
                 .ifPresent((data)-> data.callback().accept(new DpConnectData(answer, names, values)));
     }
 
+    @Override
     public CompletableFuture<Boolean> dpDisconnect(String uuid) {
         var promise = new CompletableFuture<Boolean>();
         if (dpConnects.containsKey(uuid)) {
@@ -218,6 +229,7 @@ public class WinccoaCore {
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    @Override
     public CompletableFuture<Boolean> dpQueryConnectSingle(String uuid, String query, Boolean answer, Consumer<DpQueryConnectData> callback) {
         var promise = new CompletableFuture<Boolean>();
         long id = jsDpQueryConnectSingle.execute(uuid, query, answer).asLong();
@@ -230,12 +242,14 @@ public class WinccoaCore {
         return promise;
     }
 
+    @Override
     public void dpQueryConnectCallback(String uuid, Value[][] values, boolean answer) {
         //logInfo("Java::dpConnectCallback "+uuid+" => "+names+" => "+values+" answer: "+answer);
         Optional.ofNullable(dpQueryConnects.get(uuid))
                 .ifPresent((data)-> data.callback().accept(new DpQueryConnectData(answer, values)));
     }
 
+    @Override
     public CompletableFuture<Boolean> dpQueryDisconnect(String uuid) {
         var promise = new CompletableFuture<Boolean>();
         if (dpQueryConnects.containsKey(uuid)) {
@@ -251,6 +265,7 @@ public class WinccoaCore {
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    @Override
     public void exit() {
         jsExit.execute();
     }

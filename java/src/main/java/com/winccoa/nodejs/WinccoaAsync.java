@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
-public class WinccoaAsync {
+public class WinccoaAsync implements IWinccoa {
 
     WinccoaCore scada = new WinccoaCore();
 
@@ -56,7 +56,7 @@ public class WinccoaAsync {
 
             dpSet(Arrays.asList("ExampleDP_Rpt1.","ExampleDP_Rpt2."), Arrays.asList(3, 4))
                     .thenAccept((value)->logInfo("Set Array "+value));
-            
+
             logInfo("Test End.");
 
         }).start();
