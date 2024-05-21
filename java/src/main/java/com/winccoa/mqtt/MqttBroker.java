@@ -8,7 +8,7 @@ import io.vertx.mqtt.MqttServerOptions;
 public class MqttBroker extends WinccoaAsync {
     Vertx vertx = Vertx.vertx();
 
-    public void start() {
+    public MqttBroker() {
         var options = new MqttServerOptions()
                 .setPort(1883)
                 .setHost("0.0.0.0")

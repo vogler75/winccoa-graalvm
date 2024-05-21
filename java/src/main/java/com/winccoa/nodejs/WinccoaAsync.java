@@ -11,6 +11,7 @@ public class WinccoaAsync implements IWinccoa {
 
     private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
+    // Called from node.js every 1ms.
     public boolean loop() {
         var next = queue.poll();
         if (next != null) {
