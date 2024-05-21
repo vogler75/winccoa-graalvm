@@ -5,7 +5,6 @@ import io.vertx.core.Vertx;
 import io.vertx.mqtt.MqttServer;
 import io.vertx.mqtt.MqttServerOptions;
 
-
 public class MqttBroker extends WinccoaAsync {
     Vertx vertx = Vertx.vertx();
 
