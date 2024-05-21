@@ -64,18 +64,6 @@ public class WinccoaCore {
         logInfo("Test End.");
     }
 
-    public void logInfo(String message) {
-        ctx.eval(jsLangId, "scada.logInfo('"+message+"')");
-    }
-
-    public void logWarning(String message) {
-        ctx.eval(jsLangId, "scada.logWarning('"+message+"')");
-    }
-
-    public void logSevere(String message) {
-        ctx.eval(jsLangId, "scada.logSevere('"+message+"')");
-    }
-
     // -----------------------------------------------------------------------------------------------------------------
 
     private final Value jsDpSet = ctx.eval(jsLangId, """
@@ -87,13 +75,6 @@ public class WinccoaCore {
         })
         """);
 
-    public Boolean dpSet(Object... arguments) {
-        Value result = jsDpSet.execute(arguments);
-        return result.asBoolean();
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------
-
     private final Value jsDpSetWait = ctx.eval(jsLangId, """
         (function(names, values) {
             console.log(`Java::dpSetWait(${names},${values})`);
@@ -101,7 +82,72 @@ public class WinccoaCore {
             if (Array.isArray(values)) values = values.map(item => String(item));
             return scada.dpSetWait(names, values);
         })
-        """);
+        """);        
+
+    private final Value jsDpGet = ctx.eval(jsLangId, """
+        (function(names) {
+            console.log(`Java::dpGet(${names})`);
+            if (Array.isArray(names)) names = names.map(item => String(item));
+            return scada.dpGet(names);
+        })
+        """);  
+
+    private final Value jsDpConnect = ctx.eval(jsLangId, """
+        (function(uuid, names, answer) {
+            console.log(`Java::dpConnect(${uuid},${names},${answer})`);
+            if (Array.isArray(names)) names = names.map(item => String(item));
+            return node.dpConnect(uuid, names, answer);
+        })
+        """);     
+        
+    private final Value jsDpDisconnect = ctx.eval(jsLangId, """
+        (function(id) {
+            console.log(`Java::dpDisconnect(${id})`);
+            return node.dpDisconnect(id);
+        })
+        """);    
+
+    private final Value jsDpQueryConnectSingle = ctx.eval(jsLangId, """
+        (function(uuid, query, answer) {
+            console.log(`Java::jsDpQueryConnectSingle(${uuid},${query},${answer})`);
+            return node.dpQueryConnectSingle(uuid, query, answer);
+        })
+        """);    
+
+    private final Value jsDpQueryDisconnect = ctx.eval(jsLangId, """
+        (function(id) {
+            console.log(`Java::dpQueryDisconnect(${id})`);
+            return node.dpQueryDisconnect(id);
+        })
+        """);     
+
+    private final Value jsExit = ctx.eval(jsLangId, """
+        (function(id, dp) {
+            console.log(`Java::exit()`);
+            scada.exit();
+        })
+        """);      
+
+    // -----------------------------------------------------------------------------------------------------------------
+        
+    public void logInfo(String message) {
+        ctx.eval(jsLangId, "scada.logInfo('"+message+"')");
+    }
+
+    public void logWarning(String message) {
+        ctx.eval(jsLangId, "scada.logWarning('"+message+"')");
+    }
+
+    public void logSevere(String message) {
+        ctx.eval(jsLangId, "scada.logSevere('"+message+"')");
+    }        
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    public Boolean dpSet(Object... arguments) {
+        Value result = jsDpSet.execute(arguments);
+        return result.asBoolean();
+    }
 
     public CompletableFuture<Boolean> dpSetWait(Object... arguments) {
         Value promise = jsDpSetWait.execute(arguments);  // js promise
@@ -112,14 +158,6 @@ public class WinccoaCore {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-
-    private final Value jsDpGet = ctx.eval(jsLangId, """
-        (function(names) {
-            console.log(`Java::dpGet(${names})`);
-            if (Array.isArray(names)) names = names.map(item => String(item));
-            return scada.dpGet(names);
-        })
-        """);
 
     public CompletableFuture<Object> dpGet(String dps) {
         Value promise = jsDpGet.execute(dps);  // js promise
@@ -138,14 +176,6 @@ public class WinccoaCore {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-
-    private final Value jsDpConnect = ctx.eval(jsLangId, """
-        (function(uuid, names, answer) {
-            console.log(`Java::dpConnect(${uuid},${names},${answer})`);
-            if (Array.isArray(names)) names = names.map(item => String(item));
-            return node.dpConnect(uuid, names, answer);
-        })
-        """);
 
     public boolean dpConnect(String uuid, String name, Boolean answer, Consumer<DpConnectData> callback) {
         return dpConnect(uuid, Collections.singletonList(name), answer, callback);
@@ -167,13 +197,6 @@ public class WinccoaCore {
                 .ifPresent((data)-> data.callback().accept(new DpConnectData(answer, names, values)));
     }
 
-    private final Value jsDpDisconnect = ctx.eval(jsLangId, """
-        (function(id) {
-            console.log(`Java::dpDisconnect(${id})`);
-            return node.dpDisconnect(id);
-        })
-        """);
-
     public boolean dpDisconnect(String uuid) {
         if (dpConnects.containsKey(uuid)) {
             DpConnectInfo data = dpConnects.get(uuid);
@@ -186,13 +209,6 @@ public class WinccoaCore {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-
-    private final Value jsDpQueryConnectSingle = ctx.eval(jsLangId, """
-        (function(uuid, query, answer) {
-            console.log(`Java::jsDpQueryConnectSingle(${uuid},${query},${answer})`);
-            return node.dpQueryConnectSingle(uuid, query, answer);
-        })
-        """);
 
     public boolean dpQueryConnectSingle(String uuid, String query, Boolean answer, Consumer<DpQueryConnectData> callback) {
         long id = jsDpQueryConnectSingle.execute(uuid, query, answer).asLong();
@@ -210,13 +226,6 @@ public class WinccoaCore {
                 .ifPresent((data)-> data.callback().accept(new DpQueryConnectData(answer, values)));
     }
 
-    private final Value jsDpQueryDisconnect = ctx.eval(jsLangId, """
-        (function(id) {
-            console.log(`Java::dpQueryDisconnect(${id})`);
-            return node.dpQueryDisconnect(id);
-        })
-        """);
-
     public boolean dpQueryDisconnect(String uuid) {
         if (dpQueryConnects.containsKey(uuid)) {
             DpQueryConnectInfo data = dpQueryConnects.get(uuid);
@@ -229,13 +238,6 @@ public class WinccoaCore {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-
-    private final Value jsExit = ctx.eval(jsLangId, """
-        (function(id, dp) {
-            //console.log(`Java::exit()`);
-            scada.exit();
-        })
-        """);
 
     public void exit() {
         jsExit.execute();

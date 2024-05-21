@@ -78,6 +78,8 @@ public class WinccoaAsync {
         return false;
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+
     public void logInfo(String message) {
         queue.add(() -> scada.logInfo(message));
     }
@@ -89,6 +91,8 @@ public class WinccoaAsync {
     public void logSevere(String message) {
         queue.add(() -> scada.logSevere(message));
     }    
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     public CompletableFuture<Boolean> dpSet(Object... arguments) {
         var promise = new CompletableFuture<Boolean>();
@@ -102,6 +106,8 @@ public class WinccoaAsync {
         return promise;
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+
     public CompletableFuture<Object> dpGet(String dps) {
         var promise = new CompletableFuture<Object>();
         queue.add(() -> scada.dpGet(dps).thenAccept(promise::complete));
@@ -113,6 +119,8 @@ public class WinccoaAsync {
         queue.add(() -> scada.dpGet(dps).thenAccept(promise::complete));
         return promise;
     }
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     public CompletableFuture<Boolean> dpConnect(String uuid, String name, Boolean answer, Consumer<DpConnectData> callback) {
         return dpConnect(uuid, Collections.singletonList(name), answer, callback);
@@ -134,6 +142,8 @@ public class WinccoaAsync {
         return promise;
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+
     public CompletableFuture<Boolean> dpQueryConnectSingle(String uuid, String query, Boolean answer, Consumer<DpQueryConnectData> callback) {
         var promise = new CompletableFuture<Boolean>();
         queue.add(() -> promise.complete(scada.dpQueryConnectSingle(uuid, query, answer, callback)));
@@ -149,6 +159,8 @@ public class WinccoaAsync {
         queue.add(() -> promise.complete(scada.dpQueryDisconnect(uuid)));
         return promise;
     }
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     public void exit() {
         queue.add(() -> scada.exit());
