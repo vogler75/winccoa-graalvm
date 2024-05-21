@@ -1,5 +1,6 @@
 package com.winccoa.mqtt;
 
+import com.winccoa.nodejs.DpConnectData;
 import com.winccoa.nodejs.WinccoaAsync;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
@@ -10,13 +11,23 @@ import io.vertx.mqtt.MqttEndpoint;
 
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class MqttVerticle extends AbstractVerticle {
     private WinccoaAsync scada;
     private MqttEndpoint endpoint;
     private HashMap<String, String> subscribedTopics = new HashMap<>();
+
+    private Thread workerThread;
     private volatile long messageTimer = 0;
     private int messageCounter = 0;
+
+//    private record PublishData(
+//            String topic,
+//            Buffer data
+//    ) {}
+//    private ArrayBlockingQueue<PublishData> dataQueue = new ArrayBlockingQueue<>(1000);
 
     public MqttVerticle(WinccoaAsync scada, MqttEndpoint endpoint) {
         this.scada = scada;
@@ -39,34 +50,48 @@ public class MqttVerticle extends AbstractVerticle {
 
         endpoint.disconnectHandler((handler) -> {
             scada.logInfo("Client disconnect: " + endpoint.clientIdentifier());
-            unsubscribeAll();
-            vertx.cancelTimer(messageTimer);
-            vertx.undeploy(this.deploymentID());
+            cleanupSession();
+
         });
 
         endpoint.closeHandler((handler) -> {
             scada.logInfo("Client close: " + endpoint.clientIdentifier());
-            unsubscribeAll();
-            vertx.cancelTimer(messageTimer);
-            vertx.undeploy(this.deploymentID());
+            cleanupSession();
         });
 
         endpoint.pingHandler((handler) -> {
             endpoint.pong();
         });
 
+//        workerThread = new Thread(()->{
+//            PublishData data;
+//            while (true) {
+//                try {
+//                    data = dataQueue.poll(10, TimeUnit.MILLISECONDS);
+//                    while (data != null) {
+//                        publishData(data);
+//                        data = dataQueue.poll();
+//                    }
+//                } catch (InterruptedException e) {
+//                    scada.logSevere(e.getMessage());
+//                }
+//            }
+//        });
+//        workerThread.start();
+
         endpoint.subscribeHandler((message) -> {
             message.topicSubscriptions().forEach((topic) -> {
                 var uuid = UUID.randomUUID().toString();
                 scada.dpConnect(uuid, topic.topicName(), true, (data) -> {
-                    if (endpoint.isConnected()) {
-                        messageCounter++;
-                        data.asList().forEach((record) -> {
-                            endpoint.publish(record.getKey(),
-                                    Buffer.buffer(record.getValue().toString()),
+                    data.asList().forEach((item)->{
+//                        dataQueue.add(new PublishData(item.getKey(), Buffer.buffer(item.getValue().toString())));
+                        if (endpoint.isConnected()) {
+                            messageCounter++;
+                            endpoint.publish(topic.topicName(),
+                                    Buffer.buffer(item.getValue().toString()),
                                     MqttQoS.AT_LEAST_ONCE, false /*isDup*/, false /* isRetain */);
-                        });
-                    }
+                        }
+                    });
                 }).thenAccept((ok) -> {
                     if (ok) {
                         subscribedTopics.put(topic.topicName(), uuid);
@@ -90,6 +115,21 @@ public class MqttVerticle extends AbstractVerticle {
             });
         });
     }
+
+    private void cleanupSession() {
+        unsubscribeAll();
+        vertx.cancelTimer(messageTimer);
+        vertx.undeploy(this.deploymentID());
+    }
+
+//    private void publishData(PublishData data) {
+//        if (endpoint.isConnected()) {
+//            messageCounter++;
+//            endpoint.publish(data.topic(),
+//                    data.data,
+//                    MqttQoS.AT_LEAST_ONCE, false /*isDup*/, false /* isRetain */);
+//        }
+//    }
 
     @Override
     public void stop() throws Exception {
