@@ -103,10 +103,24 @@ public class WinccoaCore implements IWinccoa {
         })
         """);
 
+    private final Value jsDpTypeDelete = ctx.eval(jsLangId, """
+        (function(dpt) {
+            console.log(`Java::dpTypeDelete(${dpt})`);
+            return node.dpTypeDelete(dpt);
+        })
+        """);
+
     private final Value jsDpCreate = ctx.eval(jsLangId, """
         (function(dpName, dpType) {
             console.log(`Java::dpCreate(${dpName},${dpType})`);
             return scada.dpCreate(dpName, dpType);
+        })
+        """);
+
+    private final Value jsDpDelete = ctx.eval(jsLangId, """
+        (function(dpName) {
+            console.log(`Java::dpDelete(${dpName})`);
+            return scada.dpDelete(dpName);
         })
         """);
 
@@ -269,18 +283,43 @@ public class WinccoaCore implements IWinccoa {
     public CompletableFuture<Integer> dpTypeCreate(String[][] elements, int[][] types) {
         var promise = jsDpTypeCreate.execute(elements, types);
         var future = new CompletableFuture<Integer>(); // java promise
-        Consumer<Double> then = (result) -> future.complete((int)Math.ceil(result)); // = (result) -> future.complete(result);
+        Consumer<Double> then = (result) -> future.complete((int)Math.ceil(result));
+        Consumer<Object> error = (result) -> future.complete(-1);
         promise.invokeMember("then", then);
+        promise.invokeMember("catch", error);
         return future;
     }
 
-    //    //dpCreate(dpeName, dpType, systemId?, dpId?): Promise<boolean>
+    @Override
+    public CompletableFuture<Integer> dpTypeDelete(String dpt) {
+        var promise = jsDpTypeDelete.execute(dpt);
+        var future = new CompletableFuture<Integer>(); // java promise
+        Consumer<Double> then = (result) -> future.complete((int)Math.ceil(result));
+        Consumer<Object> error = (result) -> future.complete(-1);
+        promise.invokeMember("then", then);
+        promise.invokeMember("catch", error);
+        return future;
+    }
+
     @Override
     public CompletableFuture<Boolean> dpCreate(String dpName, String dpType) {
         var promise = jsDpCreate.execute(dpName, dpType);
         var future = new CompletableFuture<Boolean>(); // java promise
         Consumer<Boolean> then = future::complete; // = (result) -> future.complete(result);
+        Consumer<Object> error = (result) -> future.complete(false);
         promise.invokeMember("then", then);
+        promise.invokeMember("catch", error);
+        return future;
+    }
+
+    @Override
+    public CompletableFuture<Boolean> dpDelete(String dpName) {
+        var promise = jsDpDelete.execute(dpName);
+        var future = new CompletableFuture<Boolean>(); // java promise
+        Consumer<Boolean> then = future::complete; // = (result) -> future.complete(result);
+        Consumer<Object> error = (result) -> future.complete(false);
+        promise.invokeMember("then", then);
+        promise.invokeMember("catch", error);
         return future;
     }
 }

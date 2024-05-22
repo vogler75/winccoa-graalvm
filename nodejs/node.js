@@ -86,6 +86,21 @@ function dpTypeCreate(elements, types) {
     );   
 }
 
+function dpTypeDelete(dpt) {
+    const script = new WinccoaCtrlScript(
+        scada,
+        `int main(string dpt)
+         {
+           return dpTypeDelete(dpt); 
+         }`
+    );
+    return script.start( // returns a promise
+        'main',
+        [dpt],
+        [WinccoaCtrlType.string]
+    );   
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 
 module.exports = {
@@ -93,5 +108,6 @@ module.exports = {
     dpDisconnect,
     dpQueryConnectSingle,
     dpQueryDisconnect,
-    dpTypeCreate
+    dpTypeCreate,
+    dpTypeDelete
 };

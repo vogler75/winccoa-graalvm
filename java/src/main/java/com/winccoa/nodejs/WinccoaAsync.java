@@ -139,9 +139,23 @@ public class WinccoaAsync implements IWinccoa {
     }
 
     @Override
+    public CompletableFuture<Integer> dpTypeDelete(String dpt) {
+        var promise = new CompletableFuture<Integer>();
+        queue.add(() -> scada.dpTypeDelete(dpt).thenAccept(promise::complete));
+        return promise;
+    }
+
+    @Override
     public CompletableFuture<Boolean> dpCreate(String dpName, String dpType) {
         var promise = new CompletableFuture<Boolean>();
         queue.add(() -> scada.dpCreate(dpName, dpType).thenAccept(promise::complete));
+        return promise;
+    }
+
+    @Override
+    public CompletableFuture<Boolean> dpDelete(String dpName) {
+        var promise = new CompletableFuture<Boolean>();
+        queue.add(() -> scada.dpDelete(dpName).thenAccept(promise::complete));
         return promise;
     }
 }

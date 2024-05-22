@@ -41,5 +41,9 @@ public interface IWinccoa {
 
     CompletableFuture<Integer> dpTypeCreate(String[][] elements, int[][] types);
 
+    CompletableFuture<Integer> dpTypeDelete(String dpt);
+
     CompletableFuture<Boolean> dpCreate(String dpName, String dpType);
+
+    CompletableFuture<Boolean> dpDelete(String dpName);
 }
