@@ -100,5 +100,9 @@ public class Test {
         scada.dpTypeCreate(elements, types).thenAccept((result)->{
             scada.logInfo("dpTypeCreate: "+result);
         });
+
+        scada.dpCreate("MyType_Test_1", "MyType").thenAccept((result)->{
+            scada.logInfo("dpCreate: "+result);
+        });
     }
 }

@@ -103,6 +103,13 @@ public class WinccoaCore implements IWinccoa {
         })
         """);
 
+    private final Value jsDpCreate = ctx.eval(jsLangId, """
+        (function(dpName, dpType) {
+            console.log(`Java::dpCreate(${dpName},${dpType})`);
+            return scada.dpCreate(dpName, dpType);
+        })
+        """);
+
     // -----------------------------------------------------------------------------------------------------------------
         
     @Override
@@ -263,6 +270,16 @@ public class WinccoaCore implements IWinccoa {
         var promise = jsDpTypeCreate.execute(elements, types);
         var future = new CompletableFuture<Integer>(); // java promise
         Consumer<Double> then = (result) -> future.complete((int)Math.ceil(result)); // = (result) -> future.complete(result);
+        promise.invokeMember("then", then);
+        return future;
+    }
+
+    //    //dpCreate(dpeName, dpType, systemId?, dpId?): Promise<boolean>
+    @Override
+    public CompletableFuture<Boolean> dpCreate(String dpName, String dpType) {
+        var promise = jsDpCreate.execute(dpName, dpType);
+        var future = new CompletableFuture<Boolean>(); // java promise
+        Consumer<Boolean> then = future::complete; // = (result) -> future.complete(result);
         promise.invokeMember("then", then);
         return future;
     }

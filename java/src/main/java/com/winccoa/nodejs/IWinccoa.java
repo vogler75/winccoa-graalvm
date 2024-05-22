@@ -40,4 +40,6 @@ public interface IWinccoa {
     CompletableFuture<List<String>> dpNames(String dpPattern, String dpType, boolean ignoreCase);
 
     CompletableFuture<Integer> dpTypeCreate(String[][] elements, int[][] types);
+
+    CompletableFuture<Boolean> dpCreate(String dpName, String dpType);
 }
