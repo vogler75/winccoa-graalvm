@@ -20,4 +20,4 @@ const intervalId = setInterval(() => { while (java.loop()); }, 1);
 // Test object
 global.test = new (Java.type('com.winccoa.test.Test'))(java);
 
-setTimeout(()=>global.java.exit(), 5000);
+setTimeout(()=>global.java.exit(), 10000);

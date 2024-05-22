@@ -1,5 +1,6 @@
 package com.winccoa.nodejs;
 
+import io.netty.util.internal.EmptyArrays;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
@@ -14,6 +15,15 @@ public class WinccoaCore implements IWinccoa {
 
     private final HashMap<String, DpConnectInfo> dpConnects = new HashMap<>();
     private final HashMap<String, DpQueryConnectInfo> dpQueryConnects = new HashMap<>();
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private final Value jsExit = ctx.eval(jsLangId, """
+        (function(id, dp) {
+            console.log(`Java::exit()`);
+            scada.exit();
+        })
+        """);
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -33,7 +43,7 @@ public class WinccoaCore implements IWinccoa {
             if (Array.isArray(values)) values = values.map(item => String(item));
             return scada.dpSetWait(names, values);
         })
-        """);        
+        """);
 
     private final Value jsDpGet = ctx.eval(jsLangId, """
         (function(names) {
@@ -41,7 +51,7 @@ public class WinccoaCore implements IWinccoa {
             if (Array.isArray(names)) names = names.map(item => String(item));
             return scada.dpGet(names);
         })
-        """);  
+        """);
 
     private final Value jsDpConnect = ctx.eval(jsLangId, """
         (function(uuid, names, answer) {
@@ -49,35 +59,49 @@ public class WinccoaCore implements IWinccoa {
             if (Array.isArray(names)) names = names.map(item => String(item));
             return node.dpConnect(uuid, names, answer);
         })
-        """);     
+        """);
         
     private final Value jsDpDisconnect = ctx.eval(jsLangId, """
         (function(id) {
             console.log(`Java::dpDisconnect(${id})`);
             return node.dpDisconnect(id);
         })
-        """);    
+        """);
 
     private final Value jsDpQueryConnectSingle = ctx.eval(jsLangId, """
         (function(uuid, query, answer) {
             console.log(`Java::jsDpQueryConnectSingle(${uuid},${query},${answer})`);
             return node.dpQueryConnectSingle(uuid, query, answer);
         })
-        """);    
+        """);
 
     private final Value jsDpQueryDisconnect = ctx.eval(jsLangId, """
         (function(id) {
             console.log(`Java::dpQueryDisconnect(${id})`);
             return node.dpQueryDisconnect(id);
         })
-        """);     
+        """);
 
-    private final Value jsExit = ctx.eval(jsLangId, """
-        (function(id, dp) {
-            console.log(`Java::exit()`);
-            scada.exit();
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private final Value jsDpNames = ctx.eval(jsLangId, """
+        (function(dpPattern, dpType, ignoreCase) {
+            console.log(`Java::dpNames(${dpPattern},${dpType},${ignoreCase})`);
+            if (!dpPattern) dpPattern=undefined;
+            if (!dpType) dpType=undefined;
+            if (!ignoreCase) ignoreCase=undefined;
+            return scada.dpNames(dpPattern, dpType, ignoreCase);
         })
-        """);      
+        """);
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private final Value jsDpTypeCreate = ctx.eval(jsLangId, """
+        (function(elements, types) {
+            console.log(`Java::dpTypeCreate(${elements},${types})`);
+            return node.dpTypeCreate(elements, types);
+        })
+        """);
 
     // -----------------------------------------------------------------------------------------------------------------
         
@@ -94,7 +118,14 @@ public class WinccoaCore implements IWinccoa {
     @Override
     public void logSevere(String message) {
         ctx.eval(jsLangId, "scada.logSevere('"+message+"')");
-    }        
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public void exit() {
+        jsExit.execute();
+    }
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -110,7 +141,7 @@ public class WinccoaCore implements IWinccoa {
     public CompletableFuture<Boolean> dpSetWait(Object... arguments) {
         Value promise = jsDpSetWait.execute(arguments);  // js promise
         var future = new CompletableFuture<Boolean>(); // java promise
-        Consumer<Boolean> then = future::complete; // = (values) -> future.complete(values);
+        Consumer<Boolean> then = future::complete; // = (result) -> future.complete(result);
         promise.invokeMember("then", then);
         return future;
     }
@@ -121,7 +152,7 @@ public class WinccoaCore implements IWinccoa {
     public CompletableFuture<Object> dpGet(String dps) {
         Value promise = jsDpGet.execute(dps);  // js promise
         var future = new CompletableFuture<>(); // java promise
-        Consumer<Object> then = future::complete; // = (values) -> future.complete(values);
+        Consumer<Object> then = future::complete; // = (result) -> future.complete(result);
         promise.invokeMember("then", then);
         return future;
     }
@@ -130,7 +161,7 @@ public class WinccoaCore implements IWinccoa {
     public CompletableFuture<Object> dpGet(List<String> dps) {
         Value promise = jsDpGet.execute(dps);  // js promise
         var future = new CompletableFuture<>(); // java promise
-        Consumer<Object> then = future::complete; // = (values) -> future.complete(values);
+        Consumer<Object> then = future::complete; // = (result) -> future.complete(result);
         promise.invokeMember("then", then);
         return future;
     }
@@ -216,7 +247,23 @@ public class WinccoaCore implements IWinccoa {
     // -----------------------------------------------------------------------------------------------------------------
 
     @Override
-    public void exit() {
-        jsExit.execute();
+    public CompletableFuture<List<String>> dpNames(String dpPattern, String dpType, boolean ignoreCase) {
+        var promise = new CompletableFuture<List<String>>();
+        var values = jsDpNames.execute(dpPattern, dpType, ignoreCase);
+        var result = new ArrayList<String>();
+        for (long i=0; i<values.getArraySize(); i++)
+            result.add(values.getArrayElement(i).asString());
+        promise.complete(result);
+        return promise;
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    @Override
+    public CompletableFuture<Integer> dpTypeCreate(String[][] elements, int[][] types) {
+        var promise = jsDpTypeCreate.execute(elements, types);
+        var future = new CompletableFuture<Integer>(); // java promise
+        Consumer<Double> then = (result) -> future.complete((int)Math.ceil(result)); // = (result) -> future.complete(result);
+        promise.invokeMember("then", then);
+        return future;
     }
 }

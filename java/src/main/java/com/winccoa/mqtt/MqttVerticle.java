@@ -19,15 +19,8 @@ public class MqttVerticle extends AbstractVerticle {
     private MqttEndpoint endpoint;
     private HashMap<String, String> subscribedTopics = new HashMap<>();
 
-    private Thread workerThread;
     private volatile long messageTimer = 0;
     private int messageCounter = 0;
-
-//    private record PublishData(
-//            String topic,
-//            Buffer data
-//    ) {}
-//    private ArrayBlockingQueue<PublishData> dataQueue = new ArrayBlockingQueue<>(1000);
 
     public MqttVerticle(WinccoaAsync scada, MqttEndpoint endpoint) {
         this.scada = scada;
@@ -63,28 +56,11 @@ public class MqttVerticle extends AbstractVerticle {
             endpoint.pong();
         });
 
-//        workerThread = new Thread(()->{
-//            PublishData data;
-//            while (true) {
-//                try {
-//                    data = dataQueue.poll(10, TimeUnit.MILLISECONDS);
-//                    while (data != null) {
-//                        publishData(data);
-//                        data = dataQueue.poll();
-//                    }
-//                } catch (InterruptedException e) {
-//                    scada.logSevere(e.getMessage());
-//                }
-//            }
-//        });
-//        workerThread.start();
-
         endpoint.subscribeHandler((message) -> {
             message.topicSubscriptions().forEach((topic) -> {
                 var uuid = UUID.randomUUID().toString();
                 scada.dpConnect(uuid, topic.topicName(), true, (data) -> {
                     data.asList().forEach((item)->{
-//                        dataQueue.add(new PublishData(item.getKey(), Buffer.buffer(item.getValue().toString())));
                         if (endpoint.isConnected()) {
                             messageCounter++;
                             endpoint.publish(topic.topicName(),

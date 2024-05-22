@@ -13,6 +13,8 @@ public interface IWinccoa {
 
     void logSevere(String message);
 
+    void exit();
+
     CompletableFuture<Boolean> dpSet(Object... arguments);
 
     CompletableFuture<Boolean> dpSetWait(Object... arguments);
@@ -35,5 +37,7 @@ public interface IWinccoa {
 
     CompletableFuture<Boolean> dpQueryDisconnect(String uuid);
 
-    void exit();
+    CompletableFuture<List<String>> dpNames(String dpPattern, String dpType, boolean ignoreCase);
+
+    CompletableFuture<Integer> dpTypeCreate(String[][] elements, int[][] types);
 }

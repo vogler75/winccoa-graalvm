@@ -1,4 +1,4 @@
-const { WinccoaConnectUpdateType } = require('winccoa-manager');
+const { WinccoaConnectUpdateType, WinccoaCtrlType, WinccoaCtrlScript } = require('winccoa-manager');
 
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -69,9 +69,29 @@ function dpQueryDisconnect(id) {
 
 // -----------------------------------------------------------------------------------------------------------------
 
+function dpTypeCreate(elements, types) {
+    const script = new WinccoaCtrlScript(
+        scada,
+        `int main(dyn_dyn_string elements, dyn_dyn_int types)
+         {
+           return dpTypeCreate(elements, types); 
+         }`
+    );
+    elements = elements.map(item => item.map(item => String(item)));
+    types = types.map(item => item.map(item => Number(item)));
+    return script.start( // returns a promise
+        'main',
+        [elements, types],
+        [WinccoaCtrlType.dyn_dyn_string, WinccoaCtrlType.dyn_dyn_int]
+    );   
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+
 module.exports = {
     dpConnect,
     dpDisconnect,
     dpQueryConnectSingle,
-    dpQueryDisconnect
+    dpQueryDisconnect,
+    dpTypeCreate
 };

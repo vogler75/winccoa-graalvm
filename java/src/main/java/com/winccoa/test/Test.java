@@ -1,5 +1,6 @@
 package com.winccoa.test;
 
+import com.winccoa.nodejs.DpElType;
 import com.winccoa.nodejs.IWinccoa;
 import com.winccoa.nodejs.WinccoaAsync;
 import com.winccoa.nodejs.WinccoaCore;
@@ -13,15 +14,21 @@ public class Test {
 
     public Test(IWinccoa scada) {
         switch (scada) {
-            case WinccoaCore x -> test1(x);
-            case WinccoaAsync x-> new Thread(()->test1(x)).start();
+            case WinccoaCore x -> testSequence(x);
+            case WinccoaAsync x-> new Thread(()->testSequence(x)).start();
             default -> scada.logSevere("Unknown class type!");
         }
     }
 
-    public void test1(IWinccoa scada) {
+    public void testSequence(IWinccoa scada) {
         scada.logInfo("Test Start");
+        //test1(scada);
+        //test2(scada);
+        test3(scada);
+        scada.logInfo("Test End.");
+    }
 
+    public void test1(IWinccoa scada) {
         var id1 = UUID.randomUUID().toString();
         scada.dpConnect(id1, "ExampleDP_Rpt1.", true, (data) -> {
             scada.logInfo("Callback Single "+ Arrays.toString(data.names()) +" "+ Arrays.toString(data.values()));
@@ -42,7 +49,7 @@ public class Test {
         });
 
         var promise0 = scada.dpSet("ExampleDP_Arg1.", 0)
-                .thenAccept((value)-> scada.logInfo("Set 0 Doen!"));
+                .thenAccept((value)-> scada.logInfo("Set 0 Done!"));
 
         var promise1 = scada.dpSetWait("ExampleDP_Arg1.", 1)
                 .thenAccept((value)-> scada.logInfo("Set 1 Done!"));
@@ -68,6 +75,30 @@ public class Test {
         scada.dpSet(Arrays.asList("ExampleDP_Rpt1.","ExampleDP_Rpt2."), Arrays.asList(3, 4))
                 .thenAccept((value)->scada.logInfo("Set Array "+value));
 
-        scada.logInfo("Test End.");
+    }
+
+    public void test2(IWinccoa scada) {
+        scada.dpNames("Example*.**", "ExampleDP_Float", false).thenAccept((list)->{
+            scada.logInfo("DpNames: "+String.join(",", list));
+        });
+        scada.dpNames("Example*.**", "", false).thenAccept((list)->{
+            scada.logInfo("DpNames: "+String.join(",", list));
+        });
+    }
+
+    public void test3(IWinccoa scada) {
+        String[][] elements = {
+                {"MyType", ""},
+                {"", "name"},
+                {"", "speed"}
+        };
+        int[][] types = {
+                {DpElType.STRUCT, 0},
+                {0, DpElType.STRING},
+                {0, DpElType.FLOAT}
+        };
+        scada.dpTypeCreate(elements, types).thenAccept((result)->{
+            scada.logInfo("dpTypeCreate: "+result);
+        });
     }
 }
