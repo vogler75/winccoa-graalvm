@@ -1,6 +1,5 @@
 package com.winccoa.nodejs;
 
-import io.netty.util.internal.EmptyArrays;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
@@ -8,7 +7,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.concurrent.CompletableFuture;
 
-public class WinccoaCore implements IWinccoa {
+public class WinccoaCore extends Winccoa implements IWinccoa {
     private final String jsLangId = "js";
 
     public final Context ctx = Context.getCurrent();
@@ -52,6 +51,16 @@ public class WinccoaCore implements IWinccoa {
             if (Array.isArray(names)) names = names.map(item => String(item));
             if (Array.isArray(values)) values = values.map(item => item);
             return scada.dpSetTimed(time, names, values);
+        })
+        """);
+
+    private final Value jsDpSetTimedWait = ctx.eval(jsLangId, """
+        (function(time, names, values) {
+            console.log(`Java::dpSetTimedWait(${time},${names},${values})`);
+            time = new Date(time); // ISO to Date
+            if (Array.isArray(names)) names = names.map(item => String(item));
+            if (Array.isArray(values)) values = values.map(item => item);
+            return scada.dpSetTimedWait(time, names, values);
         })
         """);
 
@@ -157,16 +166,16 @@ public class WinccoaCore implements IWinccoa {
     // -----------------------------------------------------------------------------------------------------------------
 
     @Override
-    public CompletableFuture<Boolean> dpSet(Object... arguments) {
+    public CompletableFuture<Boolean> dpSet(List<String> names, List<Object> values) {
         var promise = new CompletableFuture<Boolean>();
-        Value result = jsDpSet.execute(arguments);
+        Value result = jsDpSet.execute(names, values);
         promise.complete(result.asBoolean());
         return promise;
     }
 
     @Override
-    public CompletableFuture<Boolean> dpSetWait(Object... arguments) {
-        Value promise = jsDpSetWait.execute(arguments);  // js promise
+    public CompletableFuture<Boolean> dpSetWait(List<String> names, List<Object> values) {
+        Value promise = jsDpSetWait.execute(names, values);  // js promise
         var future = new CompletableFuture<Boolean>(); // java promise
         Consumer<Boolean> then = future::complete; // = (result) -> future.complete(result);
         Consumer<Boolean> error = (result) -> future.complete(false);
@@ -181,16 +190,16 @@ public class WinccoaCore implements IWinccoa {
         return promise;
     }
 
-    // -----------------------------------------------------------------------------------------------------------------
-
-    @Override
-    public CompletableFuture<Object> dpGet(String dps) {
-        Value promise = jsDpGet.execute(dps);  // js promise
-        var future = new CompletableFuture<>(); // java promise
-        Consumer<Object> then = future::complete; // = (result) -> future.complete(result);
-        promise.invokeMember("then", then);
+    public CompletableFuture<Boolean> dpSetTimedWait(Date time, List<String> names, List<Object> values) {
+        Value promise = jsDpSetTimedWait.execute(time, names, values);  // js promise
+        var future = new CompletableFuture<Boolean>(); // java promise
+        Consumer<Boolean> then = future::complete; // = (result) -> future.complete(result);
+        Consumer<Boolean> error = (result) -> future.complete(false);
+        promise.invokeMember("then", then).invokeMember("catch", error);
         return future;
     }
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     @Override
     public CompletableFuture<Object> dpGet(List<String> dps) {
@@ -202,11 +211,6 @@ public class WinccoaCore implements IWinccoa {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-
-    @Override
-    public CompletableFuture<Boolean> dpConnect(String uuid, String name, Boolean answer, Consumer<DpConnectData> callback) {
-        return dpConnect(uuid, Collections.singletonList(name), answer, callback);
-    }
 
     @Override
     public CompletableFuture<Boolean> dpConnect(String uuid, List<String> names, Boolean answer, Consumer<DpConnectData> callback) {

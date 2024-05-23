@@ -16,11 +16,17 @@ public interface IWinccoa {
 
     void exit();
 
-    CompletableFuture<Boolean> dpSet(Object... arguments);
+    CompletableFuture<Boolean> dpSet(String name, Object value);
 
-    CompletableFuture<Boolean> dpSetWait(Object... arguments);
+    CompletableFuture<Boolean> dpSet(List<String> names, List<Object> values);
+
+    CompletableFuture<Boolean> dpSetWait(String name, Object value);
+
+    CompletableFuture<Boolean> dpSetWait(List<String> names, List<Object> values);
 
     public CompletableFuture<Boolean> dpSetTimed(Date time, List<String> names, List<Object> values);
+
+    public CompletableFuture<Boolean> dpSetTimedWait(Date time, List<String> names, List<Object> values);
 
     CompletableFuture<Object> dpGet(String dps);
 
@@ -39,6 +45,10 @@ public interface IWinccoa {
     void dpQueryConnectCallback(String uuid, Value[][] values, boolean answer);
 
     CompletableFuture<Boolean> dpQueryDisconnect(String uuid);
+
+    CompletableFuture<List<String>> dpNames(String dpPattern);
+
+    CompletableFuture<List<String>> dpNames(String dpPattern, boolean ignoreCase);
 
     CompletableFuture<List<String>> dpNames(String dpPattern, String dpType, boolean ignoreCase);
 

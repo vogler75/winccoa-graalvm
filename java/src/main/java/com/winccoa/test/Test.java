@@ -113,7 +113,11 @@ public class Test {
         t2.setTime(t1.getTime()-10000);
         t2.setTime(t2.getTime() - t2.getTime() % 1000); // remove milliseconds
         scada.logInfo("Time1: "+t1+" Time2: "+t2);
+
         scada.dpSetTimed(t2, List.of("ExampleDP_Rpt3."), List.of(2))
                 .thenAccept((value)-> scada.logInfo("dpSetTimed Done!"));
+
+        scada.dpSetTimedWait(t2, List.of("ExampleDP_Rpt4."), List.of(2))
+                .thenAccept((value)-> scada.logInfo("dpSetTimedWait Done!"));
     }
 }
