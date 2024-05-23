@@ -285,8 +285,7 @@ public class WinccoaCore implements IWinccoa {
         var future = new CompletableFuture<Integer>(); // java promise
         Consumer<Double> then = (result) -> future.complete((int)Math.ceil(result));
         Consumer<Object> error = (result) -> future.complete(-1);
-        promise.invokeMember("then", then);
-        promise.invokeMember("catch", error);
+        promise.invokeMember("then", then).invokeMember("catch", error);
         return future;
     }
 
@@ -296,8 +295,7 @@ public class WinccoaCore implements IWinccoa {
         var future = new CompletableFuture<Integer>(); // java promise
         Consumer<Double> then = (result) -> future.complete((int)Math.ceil(result));
         Consumer<Object> error = (result) -> future.complete(-1);
-        promise.invokeMember("then", then);
-        promise.invokeMember("catch", error);
+        promise.invokeMember("then", then).invokeMember("catch", error);
         return future;
     }
 
@@ -307,8 +305,7 @@ public class WinccoaCore implements IWinccoa {
         var future = new CompletableFuture<Boolean>(); // java promise
         Consumer<Boolean> then = future::complete; // = (result) -> future.complete(result);
         Consumer<Object> error = (result) -> future.complete(false);
-        promise.invokeMember("then", then);
-        promise.invokeMember("catch", error);
+        promise.invokeMember("then", then).invokeMember("catch", error);
         return future;
     }
 
@@ -318,8 +315,7 @@ public class WinccoaCore implements IWinccoa {
         var future = new CompletableFuture<Boolean>(); // java promise
         Consumer<Boolean> then = future::complete; // = (result) -> future.complete(result);
         Consumer<Object> error = (result) -> future.complete(false);
-        promise.invokeMember("then", then);
-        promise.invokeMember("catch", error);
+        promise.invokeMember("then", then).invokeMember("catch", error);
         return future;
     }
 }
