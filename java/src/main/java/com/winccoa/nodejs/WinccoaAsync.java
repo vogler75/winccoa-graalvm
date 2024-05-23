@@ -59,6 +59,13 @@ public class WinccoaAsync implements IWinccoa {
         return promise;
     }
 
+    @Override
+    public CompletableFuture<Boolean> dpSetTimed(Date time, List<String> names, List<Object> values) {
+        var promise = new CompletableFuture<Boolean>();
+        queue.add(() -> scada.dpSetTimed(time, names, values).thenAccept(promise::complete));
+        return promise;
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
 
     @Override

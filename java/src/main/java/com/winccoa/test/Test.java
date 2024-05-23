@@ -6,6 +6,7 @@ import com.winccoa.nodejs.WinccoaAsync;
 import com.winccoa.nodejs.WinccoaCore;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -22,13 +23,14 @@ public class Test {
 
     public void testSequence(IWinccoa scada) {
         scada.logInfo("Test Start");
-        //test1(scada);
-        //test2(scada);
-        test3(scada);
+        testBasics(scada);
+        testDpNames(scada);
+        testDpTypeCreate(scada);
+        testDpSetTimed(scada);
         scada.logInfo("Test End.");
     }
 
-    public void test1(IWinccoa scada) {
+    public void testBasics(IWinccoa scada) {
         var id1 = UUID.randomUUID().toString();
         scada.dpConnect(id1, "ExampleDP_Rpt1.", true, (data) -> {
             scada.logInfo("Callback Single "+ Arrays.toString(data.names()) +" "+ Arrays.toString(data.values()));
@@ -54,7 +56,7 @@ public class Test {
         var promise1 = scada.dpSetWait("ExampleDP_Arg1.", 1)
                 .thenAccept((value)-> scada.logInfo("Set 1 Done!"));
 
-        var promise2 = scada.dpSetWait("ExampleDP_Arg1.", 2)
+        var promise2 = scada.dpSetWait(List.of("ExampleDP_Arg1."), List.of(2))
                 .thenAccept((value)-> scada.logInfo("Set 2 Done!"));
 
         var promise3 = scada.dpSetWait(
@@ -74,10 +76,9 @@ public class Test {
 
         scada.dpSet(Arrays.asList("ExampleDP_Rpt1.","ExampleDP_Rpt2."), Arrays.asList(3, 4))
                 .thenAccept((value)->scada.logInfo("Set Array "+value));
-
     }
 
-    public void test2(IWinccoa scada) {
+    public void testDpNames(IWinccoa scada) {
         scada.dpNames("Example*.**", "ExampleDP_Float", false).thenAccept((list)->{
             scada.logInfo("DpNames: "+String.join(",", list));
         });
@@ -86,7 +87,7 @@ public class Test {
         });
     }
 
-    public void test3(IWinccoa scada) {
+    public void testDpTypeCreate(IWinccoa scada) {
         String[][] elements = {
                 {"MyType", ""},
                 {"", "name"},
@@ -104,5 +105,15 @@ public class Test {
         scada.dpCreate("MyType_Test_1", "MyType").thenAccept((result)->{
             scada.logInfo("dpCreate: "+result);
         });
+    }
+
+    public void testDpSetTimed(IWinccoa scada) {
+        var t1 = new Date();
+        var t2 = new Date();
+        t2.setTime(t1.getTime()-10000);
+        t2.setTime(t2.getTime() - t2.getTime() % 1000); // remove milliseconds
+        scada.logInfo("Time1: "+t1+" Time2: "+t2);
+        scada.dpSetTimed(t2, List.of("ExampleDP_Rpt3."), List.of(2))
+                .thenAccept((value)-> scada.logInfo("dpSetTimed Done!"));
     }
 }

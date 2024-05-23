@@ -31,7 +31,7 @@ public class WinccoaCore implements IWinccoa {
         (function(names, values) {
             console.log(`Java::dpSet(${names},${values})`);
             if (Array.isArray(names)) names = names.map(item => String(item));
-            if (Array.isArray(values)) values = values.map(item => String(item));
+            if (Array.isArray(values)) values = values.map(item => item);            
             return scada.dpSet(names, values);
         })
         """);
@@ -40,8 +40,18 @@ public class WinccoaCore implements IWinccoa {
         (function(names, values) {
             console.log(`Java::dpSetWait(${names},${values})`);
             if (Array.isArray(names)) names = names.map(item => String(item));
-            if (Array.isArray(values)) values = values.map(item => String(item));
+            if (Array.isArray(values)) values = values.map(item => item);
             return scada.dpSetWait(names, values);
+        })
+        """);
+
+    private final Value jsDpSetTimed = ctx.eval(jsLangId, """
+        (function(time, names, values) {
+            console.log(`Java::dpSetTimed(${time},${names},${values})`);
+            time = new Date(time); // ISO to Date
+            if (Array.isArray(names)) names = names.map(item => String(item));
+            if (Array.isArray(values)) values = values.map(item => item);
+            return scada.dpSetTimed(time, names, values);
         })
         """);
 
@@ -82,8 +92,6 @@ public class WinccoaCore implements IWinccoa {
         })
         """);
 
-    // -----------------------------------------------------------------------------------------------------------------
-
     private final Value jsDpNames = ctx.eval(jsLangId, """
         (function(dpPattern, dpType, ignoreCase) {
             console.log(`Java::dpNames(${dpPattern},${dpType},${ignoreCase})`);
@@ -93,8 +101,6 @@ public class WinccoaCore implements IWinccoa {
             return scada.dpNames(dpPattern, dpType, ignoreCase);
         })
         """);
-
-    // -----------------------------------------------------------------------------------------------------------------
 
     private final Value jsDpTypeCreate = ctx.eval(jsLangId, """
         (function(elements, types) {
@@ -163,8 +169,16 @@ public class WinccoaCore implements IWinccoa {
         Value promise = jsDpSetWait.execute(arguments);  // js promise
         var future = new CompletableFuture<Boolean>(); // java promise
         Consumer<Boolean> then = future::complete; // = (result) -> future.complete(result);
-        promise.invokeMember("then", then);
+        Consumer<Boolean> error = (result) -> future.complete(false);
+        promise.invokeMember("then", then).invokeMember("catch", error);
         return future;
+    }
+
+    public CompletableFuture<Boolean> dpSetTimed(Date time, List<String> names, List<Object> values) {
+        var promise = new CompletableFuture<Boolean>();
+        Value result = jsDpSetTimed.execute(time.toInstant().toString(), names, values);
+        promise.complete(result.asBoolean());
+        return promise;
     }
 
     // -----------------------------------------------------------------------------------------------------------------

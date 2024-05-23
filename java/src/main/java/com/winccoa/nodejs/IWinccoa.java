@@ -2,6 +2,7 @@ package com.winccoa.nodejs;
 
 import org.graalvm.polyglot.Value;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -18,6 +19,8 @@ public interface IWinccoa {
     CompletableFuture<Boolean> dpSet(Object... arguments);
 
     CompletableFuture<Boolean> dpSetWait(Object... arguments);
+
+    public CompletableFuture<Boolean> dpSetTimed(Date time, List<String> names, List<Object> values);
 
     CompletableFuture<Object> dpGet(String dps);
 
