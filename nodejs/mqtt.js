@@ -1,7 +1,7 @@
 'use strict';
 
 // require WinCC OA interface
-const { WinccoaManager, WinccoaSecurityEventId, WinccoaConnectUpdateType } = require('winccoa-manager');
+const { WinccoaManager } = require('winccoa-manager');
 global.scada = new WinccoaManager();
 
 // Node.js communication to Java
