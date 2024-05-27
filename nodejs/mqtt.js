@@ -9,4 +9,4 @@ global.node = require('./node');
 
 // Main Java object for communication
 global.java = new (Java.type('com.winccoa.mqtt.MqttBroker'))();
-const intervalId = setInterval(() => { while (java.loop()); }, 1);
+function loop() { java.loop(); setTimeout(loop, 1); }; loop();

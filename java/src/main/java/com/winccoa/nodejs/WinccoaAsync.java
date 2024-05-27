@@ -13,11 +13,11 @@ public class WinccoaAsync extends Winccoa implements IWinccoa {
     // Called from node.js every x ms.
     public boolean loop() {
         var next = queue.poll();
-        if (next != null) {
+        for (int i=0; i<1000 && next != null; i++) {
             next.run();
-            return true;
+            next = queue.poll();
         }
-        return false;
+        return next != null;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
