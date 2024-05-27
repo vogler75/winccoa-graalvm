@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.concurrent.CompletableFuture;
 
-public class WinccoaCore extends Winccoa implements IWinccoa {
+public class WinccoaCore extends WinccoaBase implements IWinccoa {
     private final String jsLangId = "js";
 
     public final Context ctx = Context.getCurrent();

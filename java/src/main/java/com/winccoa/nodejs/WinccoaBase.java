@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public abstract class Winccoa implements IWinccoa {
+public abstract class WinccoaBase implements IWinccoa {
 
     @Override
     public CompletableFuture<Object> dpGet(String dps) {
