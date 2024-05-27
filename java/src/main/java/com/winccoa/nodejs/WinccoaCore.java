@@ -230,7 +230,11 @@ public class WinccoaCore extends Winccoa implements IWinccoa {
     public void dpConnectCallback(String uuid, String[] names, Value[] values, boolean answer) {
         //logInfo("Java::dpConnectCallback "+uuid+" => "+names+" => "+values+" answer: "+answer);
         Optional.ofNullable(dpConnects.get(uuid))
-                .ifPresent((data)-> data.callback().accept(new DpConnectData(answer, names, values)));
+                .ifPresent((connect)-> dpConnectCallbackExecute(connect, new DpConnectData(answer, names, values)));
+    }
+
+    public void dpConnectCallbackExecute(DpConnectInfo connect, DpConnectData data) {
+        connect.callback().accept(data);
     }
 
     @Override
@@ -266,7 +270,11 @@ public class WinccoaCore extends Winccoa implements IWinccoa {
     public void dpQueryConnectCallback(String uuid, Value[][] values, boolean answer) {
         //logInfo("Java::dpConnectCallback "+uuid+" => "+names+" => "+values+" answer: "+answer);
         Optional.ofNullable(dpQueryConnects.get(uuid))
-                .ifPresent((data)-> data.callback().accept(new DpQueryConnectData(answer, values)));
+                .ifPresent((connect)-> dpQueryConnectCallbackExecute(connect, new DpQueryConnectData(answer, values)));
+    }
+
+    public void dpQueryConnectCallbackExecute(DpQueryConnectInfo connect, DpQueryConnectData data) {
+        connect.callback().accept(data);
     }
 
     @Override

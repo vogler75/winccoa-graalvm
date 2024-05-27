@@ -91,11 +91,6 @@ public class WinccoaAsync extends WinccoaCore implements IWinccoa {
     }
 
     @Override
-    public void dpConnectCallback(String uuid, String[] names, Value[] values, boolean answer) {
-        super.dpConnectCallback(uuid, names, values, answer);
-    }
-
-    @Override
     public CompletableFuture<Boolean> dpDisconnect(String uuid) {
         var promise = new CompletableFuture<Boolean>();
         queue.add(() -> super.dpDisconnect(uuid).thenAccept(promise::complete));
@@ -109,11 +104,6 @@ public class WinccoaAsync extends WinccoaCore implements IWinccoa {
         var promise = new CompletableFuture<Boolean>();
         queue.add(() -> super.dpQueryConnectSingle(uuid, query, answer, callback).thenAccept(promise::complete));
         return promise;
-    }
-
-    @Override
-    public void dpQueryConnectCallback(String uuid, Value[][] values, boolean answer) {
-        super.dpQueryConnectCallback(uuid, values, answer);
     }
 
     @Override
