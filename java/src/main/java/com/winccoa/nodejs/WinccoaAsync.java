@@ -6,9 +6,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
-public class WinccoaAsync extends Winccoa implements IWinccoa {
-    protected final WinccoaCore scada = new WinccoaCore();
-    private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
+public class WinccoaAsync extends WinccoaCore implements IWinccoa {
+    private final ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(1000);
 
     // Called from node.js every x ms.
     public boolean loop() {
@@ -24,23 +23,23 @@ public class WinccoaAsync extends Winccoa implements IWinccoa {
 
     @Override
     public void logInfo(String message) {
-        queue.add(() -> scada.logInfo(message));
+        queue.add(() -> super.logInfo(message));
     }
 
     @Override
     public void logWarning(String message) {
-        queue.add(() -> scada.logWarning(message));
+        queue.add(() -> super.logWarning(message));
     }
 
     @Override
     public void logSevere(String message) {
-        queue.add(() -> scada.logSevere(message));
+        queue.add(() -> super.logSevere(message));
     }
 
     // -----------------------------------------------------------------------------------------------------------------
     @Override
     public void exit() {
-        queue.add(() -> scada.exit());
+        queue.add(() -> super.exit());
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -48,28 +47,28 @@ public class WinccoaAsync extends Winccoa implements IWinccoa {
     @Override
     public CompletableFuture<Boolean> dpSet(List<String> names, List<Object> values) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpSet(names, values).thenAccept(promise::complete));
+        queue.add(() -> super.dpSet(names, values).thenAccept(promise::complete));
         return promise;
     }
 
     @Override
     public CompletableFuture<Boolean> dpSetWait(List<String> names, List<Object> values) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpSetWait(names, values).thenAccept(promise::complete));
+        queue.add(() -> super.dpSetWait(names, values).thenAccept(promise::complete));
         return promise;
     }
 
     @Override
     public CompletableFuture<Boolean> dpSetTimed(Date time, List<String> names, List<Object> values) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpSetTimed(time, names, values).thenAccept(promise::complete));
+        queue.add(() -> super.dpSetTimed(time, names, values).thenAccept(promise::complete));
         return promise;
     }
 
     @Override
     public CompletableFuture<Boolean> dpSetTimedWait(Date time, List<String> names, List<Object> values) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpSetTimedWait(time, names, values).thenAccept(promise::complete));
+        queue.add(() -> super.dpSetTimedWait(time, names, values).thenAccept(promise::complete));
         return promise;
     }
 
@@ -78,7 +77,7 @@ public class WinccoaAsync extends Winccoa implements IWinccoa {
     @Override
     public CompletableFuture<Object> dpGet(List<String> dps) {
         var promise = new CompletableFuture<Object>();
-        queue.add(() -> scada.dpGet(dps).thenAccept(promise::complete));
+        queue.add(() -> super.dpGet(dps).thenAccept(promise::complete));
         return promise;
     }
 
@@ -87,19 +86,19 @@ public class WinccoaAsync extends Winccoa implements IWinccoa {
     @Override
     public CompletableFuture<Boolean> dpConnect(String uuid, List<String> names, Boolean answer, Consumer<DpConnectData> callback) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpConnect(uuid, names, answer, callback).thenAccept(promise::complete));
+        queue.add(() -> super.dpConnect(uuid, names, answer, callback).thenAccept(promise::complete));
         return promise;
     }
 
     @Override
     public void dpConnectCallback(String uuid, String[] names, Value[] values, boolean answer) {
-        scada.dpConnectCallback(uuid, names, values, answer);
+        super.dpConnectCallback(uuid, names, values, answer);
     }
 
     @Override
     public CompletableFuture<Boolean> dpDisconnect(String uuid) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpDisconnect(uuid).thenAccept(promise::complete));
+        queue.add(() -> super.dpDisconnect(uuid).thenAccept(promise::complete));
         return promise;
     }
 
@@ -108,26 +107,26 @@ public class WinccoaAsync extends Winccoa implements IWinccoa {
     @Override
     public CompletableFuture<Boolean> dpQueryConnectSingle(String uuid, String query, Boolean answer, Consumer<DpQueryConnectData> callback) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpQueryConnectSingle(uuid, query, answer, callback).thenAccept(promise::complete));
+        queue.add(() -> super.dpQueryConnectSingle(uuid, query, answer, callback).thenAccept(promise::complete));
         return promise;
     }
 
     @Override
     public void dpQueryConnectCallback(String uuid, Value[][] values, boolean answer) {
-        scada.dpQueryConnectCallback(uuid, values, answer);
+        super.dpQueryConnectCallback(uuid, values, answer);
     }
 
     @Override
     public CompletableFuture<Boolean> dpQueryDisconnect(String uuid) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpQueryDisconnect(uuid).thenAccept(promise::complete));
+        queue.add(() -> super.dpQueryDisconnect(uuid).thenAccept(promise::complete));
         return promise;
     }
 
     @Override
     public CompletableFuture<List<String>> dpNames(String dpPattern, String dpType, boolean ignoreCase) {
         var promise = new CompletableFuture<List<String>>();
-        queue.add(() -> scada.dpNames(dpPattern, dpType, ignoreCase).thenAccept(promise::complete));
+        queue.add(() -> super.dpNames(dpPattern, dpType, ignoreCase).thenAccept(promise::complete));
         return promise;
     }
 
@@ -136,28 +135,28 @@ public class WinccoaAsync extends Winccoa implements IWinccoa {
     @Override
     public CompletableFuture<Integer> dpTypeCreate(String[][] elements, int[][] types) {
         var promise = new CompletableFuture<Integer>();
-        queue.add(() -> scada.dpTypeCreate(elements, types).thenAccept(promise::complete));
+        queue.add(() -> super.dpTypeCreate(elements, types).thenAccept(promise::complete));
         return promise;
     }
 
     @Override
     public CompletableFuture<Integer> dpTypeDelete(String dpt) {
         var promise = new CompletableFuture<Integer>();
-        queue.add(() -> scada.dpTypeDelete(dpt).thenAccept(promise::complete));
+        queue.add(() -> super.dpTypeDelete(dpt).thenAccept(promise::complete));
         return promise;
     }
 
     @Override
     public CompletableFuture<Boolean> dpCreate(String dpName, String dpType) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpCreate(dpName, dpType).thenAccept(promise::complete));
+        queue.add(() -> super.dpCreate(dpName, dpType).thenAccept(promise::complete));
         return promise;
     }
 
     @Override
     public CompletableFuture<Boolean> dpDelete(String dpName) {
         var promise = new CompletableFuture<Boolean>();
-        queue.add(() -> scada.dpDelete(dpName).thenAccept(promise::complete));
+        queue.add(() -> super.dpDelete(dpName).thenAccept(promise::complete));
         return promise;
     }
 }
