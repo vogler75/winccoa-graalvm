@@ -15,8 +15,8 @@ public class Test {
 
     public Test(IWinccoa scada) {
         switch (scada) {
-            case WinccoaCore x -> testSequence(x);
             case WinccoaAsync x-> new Thread(()->testSequence(x)).start();
+            case WinccoaCore x -> testSequence(x);
             default -> scada.logSevere("Unknown class type!");
         }
     }
