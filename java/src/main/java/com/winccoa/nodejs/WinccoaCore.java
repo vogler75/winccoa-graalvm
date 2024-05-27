@@ -25,6 +25,15 @@ public class WinccoaCore extends WinccoaBase implements IWinccoa {
         """);
 
     // -----------------------------------------------------------------------------------------------------------------
+    private final Value jsGetSystemName = ctx.eval(jsLangId, """
+        (function(systemId) {
+            console.log(`Java::getSystemName(${systemId})`);
+            if (!systemId) systemId = undefined;
+            return scada.getSystemName(systemId);
+        })
+        """);
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     private final Value jsDpSet = ctx.eval(jsLangId, """
         (function(names, values) {
@@ -161,6 +170,16 @@ public class WinccoaCore extends WinccoaBase implements IWinccoa {
     @Override
     public void exit() {
         jsExit.execute();
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public CompletableFuture<String> getSystemName(Integer systemId) {
+        var future = new CompletableFuture<String>();
+        Value result = jsGetSystemName.execute(systemId);
+        future.complete(result.asString());
+        return future;
     }
 
     // -----------------------------------------------------------------------------------------------------------------

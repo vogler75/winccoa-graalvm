@@ -31,6 +31,8 @@ public class Test {
     }
 
     public void testBasics(IWinccoa scada) {
+        scada.getSystemName().thenAccept((name)-> scada.logInfo("SystemName: "+name));
+
         var id1 = UUID.randomUUID().toString();
         scada.dpConnect(id1, "ExampleDP_Rpt1.", true, (data) -> {
             scada.logInfo("Callback Single "+ Arrays.toString(data.names()) +" "+ Arrays.toString(data.values()));

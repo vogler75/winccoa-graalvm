@@ -7,6 +7,11 @@ import java.util.function.Consumer;
 public abstract class WinccoaBase implements IWinccoa {
 
     @Override
+    public CompletableFuture<String> getSystemName() {
+        return getSystemName(null);
+    }
+
+    @Override
     public CompletableFuture<Object> dpGet(String dps) {
         return dpGet(List.of(dps));
     }

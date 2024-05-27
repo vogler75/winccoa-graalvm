@@ -37,9 +37,19 @@ public class WinccoaAsync extends WinccoaCore implements IWinccoa {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
+
     @Override
     public void exit() {
         queue.add(() -> super.exit());
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public CompletableFuture<String> getSystemName(Integer systemId) {
+        var future = new CompletableFuture<String>();
+        queue.add(() -> super.getSystemName(systemId).thenAccept(future::complete));
+        return future;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
