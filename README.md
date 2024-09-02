@@ -1,14 +1,12 @@
-# WinCC OA JavaScript and Java Integration Library
+# WinCC OA GraalVM Node.js Runtime Integration Library
 
 Starting with WinCC OA Version 3.20, developers can leverage Node.js and JavaScript to implement business logic within the WinCC OA environment. This functionality is enabled by integrating the Node.js runtime with native connectivity to WinCC OA features, offering a powerful and flexible platform for creating custom automation solutions.
 
-This open-source Java library serves as a wrapper for WinCC OA's Node.js functions, providing a seamless way to write business logic in Java while maintaining direct access to WinCC OA's capabilities through Node.js. By utilizing the GraalVM Node.js runtime, developers can engage in polyglot programming, combining Java and JavaScript within the same codebase. This integration allows for sophisticated, hybrid solutions that harness the strengths of both languages.
+This open-source Java library serves as a wrapper for WinCC OA's Node.js functions, providing a seamless way to write business logic in Java while maintaining direct access to WinCC OA's capabilities through Node.js.  
 
-Key features of the WinCC OA JavaScript and Node.js Integration Library include:
+By utilizing the GraalVM Node.js runtime, this integration enables the creation of solutions for WinCC OA that leverage the power of Java and its extensive library ecosystem, alongside the flexibility of JavaScript.
 
-* Native Connectivity: Directly connect to WinCC OA functionalities from your Java code through the Node.js runtime.
-* Polyglot Programming: Combine Java and JavaScript in a single codebase, enabling the use of each language's strengths.
-* Enhanced Flexibility: Implement business logic in the language of your choice without sacrificing access to the full suite of WinCC OA features.
+**Please be aware that the GraalVM Node.js Runtime is not officially supported by WinCC Open Architecture.**
 
 # Setup Instructions
 
