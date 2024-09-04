@@ -11,7 +11,7 @@ By utilizing the GraalVM Node.js runtime, this integration enables the creation 
 # Setup Instructions
 
 1. **Download and Extract GraalVM Node.js Runtime**  
-   Download the GraalVM Node.js Runtime from [this link](https://github.com/oracle/graaljs/releases/) and unzip it to a directory. In this example, we extracted it to `C:\Tools\graalnodejs-community-24.0.1-windows-amd64`. Make sure to download the correct file, which is named **graalnodejs**-24.0.2-windows-amd64.zip (Windows version). After extraction, set the `PATH` variable to point to the bin directory of the extracted files:
+   Download the GraalVM Node.js Runtime from [this link](https://github.com/oracle/graaljs/releases/download/graal-24.0.1/graalnodejs-community-jvm-24.0.1-windows-amd64.zip) and unzip it to a directory. In this example, we extracted it to `C:\Tools\graalnodejs-community-jvm-24.0.1-windows-amd64`. Make sure to download the correct file, which is named **graalnodejs** and also has "**jvm**" in the name (Windows version). After extraction, set the `PATH` variable to point to the bin directory of the extracted files:
    ```bash
    set PATH="C:\Tools\graalnodejs-community-24.0.1-windows-amd64\bin";%PATH%
    ```
