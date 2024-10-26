@@ -106,36 +106,6 @@ public class SnowflakeVerticle extends AbstractVerticle {
         });
     }
 
-    public void writeRecords() {
-        // Insert rows into the channel (Using insertRows API)
-        System.out.println("Inserting rows into the channel..");
-
-        // Example data using Vert.x JsonObject
-        var record = new HashMap<String, Object>();
-        record.put("SYS", "gateway_1");
-        record.put("NODEID", "node_42");
-        record.put("ADDRESS", "456 Elm St, Springfield, USA");
-        record.put("SOURCETIME", Instant.now().toString());
-        record.put("SERVERTIME", Instant.now().toString());
-        record.put("STRINGVALUE", "example_value");
-        record.put("STATUS", "active");
-
-        int totalRowsInTable = 1000;
-        for (int i = 0; i < totalRowsInTable; i++) {
-            record.put("NUMERICVALUE", i);
-
-            // Insert the row with the current offset_token
-            if (channel != null) {
-                InsertValidationResponse response = channel.insertRow(record, String.valueOf(i));
-                if (response.hasErrors()) {
-                    // Simply throw if there is an exception, or you can do whatever you want with the erroneous row
-                    response.getInsertErrors().getFirst().getException().printStackTrace();
-                }
-            }
-        }
-        System.out.printf("Inserted %d rows into the channel%n", totalRowsInTable);
-    }
-
     @Override
     public void stop() throws Exception {
         // Close the channel, the function internally will make sure everything is committed (or throw an exception if there is any issue)
