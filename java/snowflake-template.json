@@ -1,0 +1,14 @@
+{
+  "account": "xx00000",
+  "url": "https://xx00000.eu-central-1.snowflakecomputing.com:443",
+  "user": "xxxxxx",
+  "role": "accountadmin",
+  "scheme": "https",
+  "port": 443,
+  "private_key_path": "snowflake.p8",
+  "database": "SCADA",
+  "schema": "SCADA",
+  "table": "SCADA",
+  "scada_system": "Example",
+  "scada_query": "FROM '*' WHERE _DPT= \"ExampleDP_Float\""  
+}

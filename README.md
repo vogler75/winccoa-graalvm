@@ -41,3 +41,33 @@ By utilizing the GraalVM Node.js runtime, this integration enables the creation 
    You can now start the MQTT Server example by running `startMqtt.bat`. If everything is set up correctly, the manager should start and connect to WinCC OA. The server will now host a simple MQTT server interface on port 1883. You can use any MQTT client to subscribe to WinCC OA datapoints, such as `ExampleDP_Arg1.`
 
    **Note:** The provided MQTT server is a basic implementation and not a fully compliant MQTT server.
+
+# Snowflake Instructions   
+
+```
+CREATE OR REPLACE SCHEMA scada;
+CREATE TABLE IF NOT EXISTS scada.scada (
+  system character varying(1000) NOT NULL,
+  datapoint character varying(1000) NOT NULL,
+  sourcetime timestamp with time zone NOT NULL,
+  servertime timestamp with time zone NOT NULL,
+  numericvalue numeric,
+  stringvalue text,
+  status character varying(30),
+  CONSTRAINT scada_pk PRIMARY KEY (system, datapoint, sourcetime)
+  );
+```
+
+Generate key: https://docs.snowflake.com/en/user-guide/key-pair-auth
+
+> openssl genrsa 2048 | openssl pkcs8 -topk8 -v2 des3 -inform PEM -out snowflake.p8 -nocrypt 
+
+> openssl rsa -in snowflake.p8 -pubout -out snowflake.pub
+
+> ALTER USER xxxxxx SET RSA_PUBLIC_KEY='MIIBIjANBgkqh...'; -- Replace this with your public key from the snowflake.pub file (without -----BEGIN PRIVATE KEY----- and without -----END PRIVATE KEY-----)
+
+Copy snowflake-template.json to snowflake.json and set your connection settings and your scada query.
+
+> cd C:\WinCC_OA_Proj\Test320\javascript\winccoa-graalvm\java
+
+> startSnow.bat

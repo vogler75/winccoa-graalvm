@@ -11,8 +11,6 @@ import io.vertx.mqtt.MqttEndpoint;
 
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 public class MqttVerticle extends AbstractVerticle {
     private WinccoaAsync scada;

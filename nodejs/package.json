@@ -5,7 +5,9 @@
   "main": "index.js",
   "keywords": [
     "WinCCOA"
-  ],"license": "MIT",
-  "dependencies": {    
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "Java": "file:"
   }
 }
